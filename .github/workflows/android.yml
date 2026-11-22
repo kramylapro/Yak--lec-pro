@@ -13,7 +13,7 @@ jobs:
       - run: pip install pillow
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@av4
         with: { gradle-version: '8.9' }
       - name: Adresse du contrôle à distance et fabrication de l'application web
         run: |
