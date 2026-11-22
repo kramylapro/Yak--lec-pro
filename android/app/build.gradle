@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.yakelec.pro'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.yakelec.pro'
+        minSdk 24
+        targetSdk 34
+        versionCode 194
+        versionName '1.9.4'
+    }
+    buildTypes { release { minifyEnabled false } }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}

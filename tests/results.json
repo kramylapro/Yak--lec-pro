@@ -1,0 +1,977 @@
+[
+ {
+  "name": "A1 Création de compte refusée si mots de passe différents",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "A2 Compte créé et connexion automatique",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "A3 Tableau de bord : logo + 7 entrées (portail masqué)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "A4 Mauvais mot de passe refusé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "A5 Reconnexion réussie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B1 Projet créé avec nom / installation / type de schéma",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B2 Modification du projet",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B3 Duplication du projet",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B4 Suppression annulée : projet conservé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B5 Suppression après confirmation",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "B6 Filtre de la liste",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "C1 Bibliothèque : 26 symboles de base + 30 industriels",
+  "ok": true,
+  "detail": "56"
+ },
+ {
+  "name": "C2 Tous les symboles demandés sont présents",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "C3 Chaque symbole a fiche + norme + rendu des 3 types de schéma",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "C4 Ouverture de la fiche descriptive",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "C5 Recherche de symbole",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "C6 Représentation adaptée au type de schéma (prise : 2P+T en unifilaire)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D1 Symboles déposés sur la feuille",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D2 Identification automatique (S1, H1)",
+  "ok": true,
+  "detail": "['', 'S1', 'H1', '']"
+ },
+ {
+  "name": "D3 Conducteurs tracés entre bornes (3)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D4 Schéma dessiné à la main : aucune anomalie",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "D5 Marqueurs de bornes : toutes reliées",
+  "ok": true,
+  "detail": "0"
+ },
+ {
+  "name": "D6 Déplacement d'un composant (grille respectée)",
+  "ok": true,
+  "detail": "{'id': 'chunyodbq0d', 'type': 'lampe', 'x': 180, 'y': 320, 'rot': 0, 'label': 'H1', 'val': ''}"
+ },
+ {
+  "name": "D7 Les conducteurs suivent le composant déplacé (aucune anomalie)",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "D8 Annuler (Ctrl+Z)",
+  "ok": true,
+  "detail": "{'id': 'chunyodbq0d', 'type': 'lampe', 'x': 100, 'y': 320, 'rot': 0, 'label': 'H1', 'val': ''}"
+ },
+ {
+  "name": "D9 Rétablir (Ctrl+Y)",
+  "ok": true,
+  "detail": "{'id': 'chunyodbq0d', 'type': 'lampe', 'x': 180, 'y': 320, 'rot': 0, 'label': 'H1', 'val': ''}"
+ },
+ {
+  "name": "D10 Rotation 90° (touche R) : les conducteurs restent raccordés aux bornes",
+  "ok": true,
+  "detail": "[90, ['AMBIGUOUS', 'AMBIGUOUS']]"
+ },
+ {
+  "name": "D11 Copier / coller (nouvelle identification unique)",
+  "ok": true,
+  "detail": "[5, ['H1', 'H2']]"
+ },
+ {
+  "name": "D12 Suppression",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D13 Annuler la suppression",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D14 Dérivation sur un conducteur : jonction ajoutée automatiquement",
+  "ok": true,
+  "detail": "[0, 1]"
+ },
+ {
+  "name": "D15 Zoom (molette)",
+  "ok": true,
+  "detail": "[1, 1.12]"
+ },
+ {
+  "name": "D16 Déplacement de la feuille (pan)",
+  "ok": true,
+  "detail": "[7.999999999999886, 87.99999999999989]"
+ },
+ {
+  "name": "D17 Grille masquable",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D18 Ajuster la vue",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D19 Propriétés : identification et valeur",
+  "ok": true,
+  "detail": "{'id': 'ckp1hdybpyz', 'type': 'interrupteur', 'x': 100, 'y': 200, 'rot': 0, 'label': 'S10', 'val': '10 A'}"
+ },
+ {
+  "name": "D20 Sauvegarde automatique",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "D21 Marque d'enregistrement affichée",
+  "ok": true,
+  "detail": "Enregistré à 18:04:04"
+ },
+ {
+  "name": "E-allumage-1 Simple allumage : vérification sans anomalie",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "E-allumage-2 Simple allumage : enregistré (4 composants, 3 conducteurs)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-double-1 Double allumage : vérification sans anomalie",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "E-double-2 Double allumage : enregistré (6 composants, 5 conducteurs)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-1 Va-et-vient : vérification sans anomalie",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "E-vav-2 Va-et-vient : enregistré (5 composants, 5 conducteurs)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-commande-1 Circuit de commande simple : vérification sans anomalie",
+  "ok": true,
+  "detail": "[]"
+ },
+ {
+  "name": "E-commande-2 Circuit de commande simple : enregistré (8 composants, 7 conducteurs)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-3 Va-et-vient : le croisement des deux navettes n'est PAS une connexion",
+  "ok": true,
+  "detail": "{'sep': True, 'w1': 'T:c3.L1', 'w2': 'T:c3.L2', 'crossing': True}"
+ },
+ {
+  "name": "E-0 Session conservée après rechargement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-allumage-4 Réouverture : données identiques (JSON)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-allumage-5 Réouverture : connexions identiques (réseaux)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-allumage-6 Réouverture : symboles et tracés identiques (rendu SVG)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-allumage-7 Réouverture : nombre d'éléments affichés",
+  "ok": true,
+  "detail": "[4, 3]"
+ },
+ {
+  "name": "E-allumage-8 Réouverture : vérification toujours sans anomalie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-double-4 Réouverture : données identiques (JSON)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-double-5 Réouverture : connexions identiques (réseaux)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-double-6 Réouverture : symboles et tracés identiques (rendu SVG)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-double-7 Réouverture : nombre d'éléments affichés",
+  "ok": true,
+  "detail": "[6, 5]"
+ },
+ {
+  "name": "E-double-8 Réouverture : vérification toujours sans anomalie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-4 Réouverture : données identiques (JSON)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-5 Réouverture : connexions identiques (réseaux)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-6 Réouverture : symboles et tracés identiques (rendu SVG)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-vav-7 Réouverture : nombre d'éléments affichés",
+  "ok": true,
+  "detail": "[5, 5]"
+ },
+ {
+  "name": "E-vav-8 Réouverture : vérification toujours sans anomalie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-commande-4 Réouverture : données identiques (JSON)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-commande-5 Réouverture : connexions identiques (réseaux)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-commande-6 Réouverture : symboles et tracés identiques (rendu SVG)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "E-commande-7 Réouverture : nombre d'éléments affichés",
+  "ok": true,
+  "detail": "[8, 7]"
+ },
+ {
+  "name": "E-commande-8 Réouverture : vérification toujours sans anomalie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "F1 Conducteur isolé détecté",
+  "ok": true,
+  "detail": "['ISOLATED']"
+ },
+ {
+  "name": "F2 Fil non raccordé détecté",
+  "ok": true,
+  "detail": "['DANGLING', 'TERM_OPEN', 'OPEN']"
+ },
+ {
+  "name": "F3 Borne sans connexion + circuit ouvert détectés",
+  "ok": true,
+  "detail": "['TERM_OPEN', 'TERM_OPEN', 'OPEN']"
+ },
+ {
+  "name": "F4 Phase reliée au neutre : court-circuit détecté",
+  "ok": true,
+  "detail": "['SRC_OPEN', 'SHORT']"
+ },
+ {
+  "name": "F5 Composant sans identification détecté",
+  "ok": true,
+  "detail": "['NO_ID']"
+ },
+ {
+  "name": "F6 Identification en double détectée",
+  "ok": true,
+  "detail": "['DUP_ID', 'DUP_ID']"
+ },
+ {
+  "name": "F7 Borne non raccordée du nouvel appareil détectée",
+  "ok": true,
+  "detail": "['TERM_OPEN']"
+ },
+ {
+  "name": "F8 Un simple croisement n'est jamais une connexion (pas de court-circuit)",
+  "ok": true,
+  "detail": "['DANGLING', 'DANGLING']"
+ },
+ {
+  "name": "F9 Contact « en T » sans jonction signalé (ambigu)",
+  "ok": true,
+  "detail": "['AMBIGUOUS']"
+ },
+ {
+  "name": "F10 Même contact avec une jonction : connexion acceptée (plus d'ambiguïté)",
+  "ok": true,
+  "detail": "['SHORT']"
+ },
+ {
+  "name": "F11 Absence de source signalée",
+  "ok": true,
+  "detail": "['TERM_OPEN', 'TERM_OPEN', 'TERM_OPEN', 'TERM_OPEN', 'NO_SOURCE']"
+ },
+ {
+  "name": "F12 Lampe reliée à la phase aux deux bornes : incohérence détectée (même potentiel)",
+  "ok": true,
+  "detail": "['SRC_OPEN', 'SAME_POT']"
+ },
+ {
+  "name": "F13 Moteur triphasé non alimenté signalé",
+  "ok": true,
+  "detail": "['SRC_OPEN', 'SRC_OPEN', 'TERM_OPEN', 'TERM_OPEN', 'PE_OPEN', 'SRC_OPEN', 'OPEN']"
+ },
+ {
+  "name": "G1 Unifilaire : nombre de conducteurs et désignation du conducteur",
+  "ok": true,
+  "detail": "{'id': 'wkelalbbsd8', 'pts': [[100, 100], [100, 160]], 'n': 3, 'desig': '3G1,5'}"
+ },
+ {
+  "name": "G2 Unifilaire : traits obliques + désignation affichés",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "G3 Changement de type de schéma",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "H1 Export SVG valide (XML) avec cartouche",
+  "ok": true,
+  "detail": "(7393, 8)"
+ },
+ {
+  "name": "H2 Export PNG valide",
+  "ok": true,
+  "detail": "(772, 1508)"
+ },
+ {
+  "name": "H3 PNG non vide (contenu dessiné)",
+  "ok": true,
+  "detail": "20371"
+ },
+ {
+  "name": "H4 Export PDF valide (1 page A4)",
+  "ok": true,
+  "detail": "Title:           Circuit de commande simple\nCreator:         Yak-Ã©lec-pro\nProducer:        Yak-Ã©lec-pro 1.3.0\nCustom Metadata: no\nMetadata Stream: no\nTagged:          no\nUserProperties:  no\nSuspects"
+ },
+ {
+  "name": "H5 PDF : le schéma est visible",
+  "ok": true,
+  "detail": "3134"
+ },
+ {
+  "name": "H6 Export projet JSON (sauvegarde / transfert)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "H7 Import d'un projet exporté",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "H8 Import d'un fichier invalide refusé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "I1 Deuxième utilisateur : aucun projet de l'autre compte",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "I2 Changement de mot de passe",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "I3 Suppression de compte",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "J1 Mobile (390 px) : pas de défilement horizontal de la page",
+  "ok": true,
+  "detail": "390"
+ },
+ {
+  "name": "J2 Mobile : palette de symboles en tiroir, symbole armé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "L1 Champ mot de passe masqué par défaut",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "L2 Clic sur l'œil : mot de passe visible",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "L3 Second clic : mot de passe masqué à nouveau",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "L4 Œil sur « Confirmer le mot de passe » (indépendant)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "L5 Œil dans les paramètres (changement de mot de passe)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M1 Simple allumage : lampe éteinte puis allumée au clic, éteinte au 2e clic",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M2 Double allumage : deux lampes indépendantes",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M3 Va-et-vient : chaque interrupteur inverse l'état de la lampe",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M4 Commande : lampe allumée tant que S1 est appuyé, S0 ne coupe rien au repos",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M5 Démarrage direct : marche, auto-maintien, arrêt par S0",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M6 Démarrage direct : déclenchement thermique puis réarmement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M7 Sens de rotation : deux phases permutées → sens inverse",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M8 Temporisation : lampe éteinte avant le délai (2 s), allumée après (3,5 s)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M8b Court-circuit phase/neutre : le disjoncteur déclenche",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M8c Courant continu : alim_cc alimente un moteur CC",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "M9 Aucune erreur sur la simulation des circuits (lecture de la vue)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "N1 Bouton Simuler : bandeau de simulation et édition verrouillée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "N2 Clic sur l'interrupteur : lampe allumée (halo visible)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "N3 Arrêt de la simulation : retour à l'édition",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "N4 Moteur en rotation animée pendant l'appui sur S1",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "N5 Auto-maintien : moteur toujours animé après relâchement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O1 Métré : câbles calculés selon les formules (15 m en 1,5 mm², 24 m en 2,5 mm²)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O2 Circuits : 8 prises max par circuit (9 → 2 circuits, 17 → 3)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O3 Appareil spécialisé : circuit dédié 32 A / 6 mm² sur différentiel type A",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O4 Éclairage séparé des prises (2 différentiels) puis regroupé si la règle est décochée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O5 Prix du catalogue : total = Σ quantité × prix",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O6 Article absent du catalogue : avertissement, aucune erreur",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O7 Coffret : places suffisantes, réserve ≥ 20 %, plus grand coffret si beaucoup de circuits",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O8 Étude vide : aucun article, pas d'erreur",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O9 Écran : le résumé se met à jour en direct",
+  "ok": true,
+  "detail": "1 pièce(s)\n5 points lumineux\n6 prises\n2 circuits\nCoffret 2 rangées × 13 modules"
+ },
+ {
+  "name": "O10 Écran : tableau du matériel, circuits et coffret (SVG) affichés",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O11 Écran : appareil spécialisé ajouté (circuit cuisinière)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O12 Étude enregistrée : retrouvée après rechargement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O13 Export CSV : matériel, total et circuits",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O14 Plusieurs études : création, sélection",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "O15 Suppression d'une étude après confirmation",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P1 Un compte ordinaire ne voit pas le portail (menu, accueil, accès direct)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P2 Création du compte administrateur refusée sans le bon mot de passe",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P2b Mot de passe administrateur jamais écrit en clair dans le code",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P3 Compte administrateur créé : le portail est visible",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P4 Le portail ne s'ouvre pas sans le mot de passe",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P5 Mot de passe faux refusé, blocage après 5 essais, bon mot de passe accepté",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P6 Apparence : nom, couleurs, titre de la page et monnaie modifiés",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P7 Message d'accueil personnalisé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P8 Logo remplaçable depuis un fichier image",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P9 Logo d'origine rétabli",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P10 Configuration conservée après rechargement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P11 Catalogue : prix modifié et enregistré",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P12 Catalogue : article ajouté",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P13 Catalogue : hausse de 10 % de tous les prix",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P14 Catalogue : export CSV puis import (prix mis à jour depuis Excel)",
+  "ok": true,
+  "detail": "id;categorie;designation;unite;prix;modules;rangees;modules_par_rangee\n\"cable_1_5\";\"Câbles\";\"Câble U-1000 R2V / fil H07V-U 1,5 mm²\";\"m\";\"0\";\"0\";\"\";\"\"\n\"cable_2_5\";\"Câbles\";\"Câble U-1000 R2V / fil H07V-"
+ },
+ {
+  "name": "P15 Les prix du portail alimentent le quantitatif",
+  "ok": true,
+  "detail": "[16000, 48000]"
+ },
+ {
+  "name": "P15b Photo d'un appareil ajoutée dans le catalogue (image réduite, enregistrée)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P15c Coffret : la photo remplace le dessin pour les disjoncteurs 20 A uniquement",
+  "ok": true,
+  "detail": "(1, 5)"
+ },
+ {
+  "name": "P15d Photo retirée : retour au dessin réaliste",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P16 Règles : 2 points lumineux par circuit → 5 points = 3 circuits",
+  "ok": true,
+  "detail": "3"
+ },
+ {
+  "name": "P17 Appareils spécialisés : ajout d'un appareil",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P18 Fiche de symbole modifiée visible dans la bibliothèque",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P19 Export de la configuration (JSON)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P20 Rétablissement des réglages d'origine",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P21 Mise à jour depuis un fichier de configuration",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P22 Fichier de configuration invalide refusé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "P23 Journal des modifications renseigné",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "Q1 Chaque composant reçoit exactement le symbole prévu (aucune erreur de correspondance)",
+  "ok": true,
+  "detail": "{}"
+ },
+ {
+  "name": "Q2 Tous les symboles référencés existent dans la bibliothèque",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "Q3 Composants sans symbole : signalés, aucun symbole inventé",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "Q4 Écran Composants : une ligne par composant, vignettes affichées",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "Q5 Export CSV de la liste des composants et symboles",
+  "ok": true,
+  "detail": "Catégorie;Composant;Symbole de la bibliothèque;Remarque;Norme\n\"Câbles\";\"Câble U-1000 R2V / fil H07V-U 1,5 mm²\";\"Conducteur\";\"Symbole du conducteur ; en unifilaire, la section et le nombre de conducteu"
+ },
+ {
+  "name": "Q6 Quantitatif : vignette de symbole dans la liste du matériel",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "Q7 Coffret : chaque appareil est dessiné (face avant sur rail DIN) sans photo",
+  "ok": true,
+  "detail": "5"
+ },
+ {
+  "name": "R1 DPN (disjoncteur phase+neutre) : 1 module de 18 mm ; ID 2P : 2 modules",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "R2 Normes européennes associées : EN 60898-1 (DPN), EN 61008-1 (ID), EN 61643-11 (parafoudre), EN 61439-3 (coffret), EN 60669-1, EN 60670-1",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "R3 Coffret : DPN sur 1 module, ID sur 2 modules, aucune rangée dépassée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "R4 Obturateurs : un par place libre du coffret",
+  "ok": true,
+  "detail": "[17, 17]"
+ },
+ {
+  "name": "R5 Mise à jour d'un ancien catalogue : prix et articles conservés, noms/normes/modules actualisés",
+  "ok": true,
+  "detail": "[777, 1, 'Disjoncteur DPN 1P+N 16 A – courbe C – 6 kA', 'EN 60898-1 (disjoncteurs pour installations domestiques) – pouvoir de coupure 6 000 A', True, True, 3]"
+ },
+ {
+  "name": "R6 Écran Composants : normes européennes affichées",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "R7 Quantitatif : normes sous les désignations et légende des normes du coffret",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S1 Site isolé : énergie, batteries et panneaux calculés selon les formules",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S2 Chaînes : tension à vide à froid ≤ limite du régulateur, tension mini ≤ tension à chaud",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S3 Batteries : tension du parc respectée (séries × tension nominale), lithium ≠ plomb",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S4 Onduleur : puissance continue et surcharge suffisantes ; démarrage moteur pris en compte",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S5 Câbles : section ≥ courant et ≥ calibre du fusible ; câble PV ≥ 4 mm², batterie ≥ 16 mm²",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S6 Raccordé réseau : chaînes dans la plage de l'onduleur, production et couverture calculées",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S7 Liste du matériel : panneaux, régulateur, onduleur, batteries, câbles, protections, normes",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S8 Prix : le total suit les prix saisis (équipements et catalogue)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S9 Entrées incomplètes ou absurdes : avertissement, aucune erreur",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S10 Écran : grille de saisie, cartes de résultat, synoptique, détail et matériel",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S11 Écran : le dimensionnement se met à jour en direct quand on change une valeur",
+  "ok": true,
+  "detail": "PANNEAUX\n2 × 400 Wc\n800 Wc – 1 chaîne(s) de 2"
+ },
+ {
+  "name": "S12 Écran : bascule en mode raccordé au réseau (synoptique, champs adaptés)",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S13 Écran : ajout d'une ligne et d'un appareil courant",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S14 Étude enregistrée : retrouvée après rechargement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S15 Export CSV du dimensionnement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S16 Portail : panneau modifié (puissance, prix) et enregistré",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S17 Portail : ajout d'une batterie",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S18 Portail : règle photovoltaïque modifiée",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S19 Les équipements du portail alimentent le dimensionnement",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "S20 Rétablissement des équipements photovoltaïques d'origine",
+  "ok": true,
+  "detail": ""
+ },
+ {
+  "name": "K Aucune erreur JavaScript pendant toute la session",
+  "ok": true,
+  "detail": "[]"
+ }
+]
