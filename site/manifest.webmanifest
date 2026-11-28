@@ -1,0 +1,26 @@
+{
+ "name": "Yak-élec-pro",
+ "short_name": "Yak-élec-pro",
+ "description": "Schémas électriques, simulation, métré et photovoltaïque",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#0b1d3a",
+ "theme_color": "#0b1d3a",
+ "lang": "fr",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
