@@ -59,7 +59,7 @@
     let sel = { c: new Set(), w: new Set() }, clip = null, pasteN = 0, markers = [], focusMark = null;
     let hist = [JSON.stringify(doc)], hi = 0;
     const ptrs = new Map(); let pinch = null;
-    let simObj = null, simTimer = null, simHold = null;
+    let simObj = null, simTimer = null, simHold = null, simPaused = false;
 
     // ---------- structure SVG ----------
     svg.innerHTML = `<defs><pattern id="gridp" width="${G}" height="${G}" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" class="gdot"/></pattern></defs>
@@ -83,6 +83,7 @@
       content.innerHTML = EE.Render.docMarkup(doc, mode(), { hit: true, A });
       let o = '';
       sel.c.forEach((id) => { const c = doc.comps.find((x) => x.id === id); if (!c) return; const b = Lib.bbox(c); o += `<rect class="selbox" x="${b.x1 - 5}" y="${b.y1 - 5}" width="${b.x2 - b.x1 + 10}" height="${b.y2 - b.y1 + 10}" rx="4"/>`; });
+      sel.c.forEach((id) => { const c = doc.comps.find((x) => x.id === id); if (!c || sel.c.size > 6) return; Lib.get(c.type).term.forEach((tm) => { const q = Lib.termWorld(c, tm); o += `<circle class="tsel" cx="${q.x}" cy="${q.y}" r="5.5"/>`; }); });
       sel.w.forEach((id) => { const w = doc.wires.find((x) => x.id === id); if (w) o += `<polyline class="selwire" points="${w.pts.map((p) => p.join(',')).join(' ')}"/>`; });
       if (settings.terminalMarks) A.terms.forEach((T) => { if (T.comp.type === 'connexion') return; o += connectedTerm(A, T) ? `<circle class="tok" cx="${T.x}" cy="${T.y}" r="2.6"/>` : `<circle class="tfree" cx="${T.x}" cy="${T.y}" r="5"/>`; });
       markers.forEach((m) => { o += `<g class="mk ${m.sev}"><circle cx="${m.x}" cy="${m.y}" r="${focusMark === m.id ? 16 : 11}"/><text x="${m.x}" y="${m.y + 4}" text-anchor="middle">${m.id}</text></g>`; });
@@ -182,6 +183,7 @@
       sel = { c: new Set(), w: new Set() }; commit(); notifySel();
     }
     function rotate() { if (!sel.c.size) return; transformComps(doc, [...sel.c], (c) => { c.rot = ((c.rot || 0) + 90) % 360; }); commit(); }
+    function flipSel() { if (!sel.c.size) return; transformComps(doc, [...sel.c], (c) => { c.flip = !c.flip; if (!c.flip) delete c.flip; }); commit(); }
     function nudge(dx, dy) { if (!sel.c.size) return; transformComps(doc, [...sel.c], (c) => { c.x += dx; c.y += dy; }); commit(); }
     function copy() {
       if (!sel.c.size && !sel.w.size) return false;
@@ -257,11 +259,22 @@
       }
       if (tgt && tgt.dataset.wid) {
         const id = tgt.dataset.wid; if (!e.shiftKey && !e.ctrlKey) sel = { c: new Set(), w: new Set() };
-        if (sel.w.has(id) && (e.shiftKey || e.ctrlKey)) sel.w.delete(id); else sel.w.add(id); render(); notifySel(); return;
+        if (sel.w.has(id) && (e.shiftKey || e.ctrlKey)) sel.w.delete(id); else sel.w.add(id);
+        const wr = doc.wires.find((x) => x.id === id);
+        if (wr && !e.shiftKey && !e.ctrlKey && mode() !== 'architectural') { const si = segAt(wr, w); if (si >= 0) drag = { type: 'seg', wid: id, si, start: w, base: JSON.parse(JSON.stringify(doc)), moved: false, d: 0 }; }
+        render(); notifySel(); return;
       }
       if (e.shiftKey) { drag = { type: 'box', start: w, cur: w }; return; }
       if (sel.c.size || sel.w.size) { sel = { c: new Set(), w: new Set() }; notifySel(); }
       drag = { type: 'pan', sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y }; render();
+    }
+    function segAt(w, p) { let best = -1, bd = 9 / Math.max(0.5, v.k); for (let i = 0; i < w.pts.length - 1; i++) { const a = w.pts[i], b = w.pts[i + 1]; let d; if (a[1] === b[1]) d = p.x >= Math.min(a[0], b[0]) - 4 && p.x <= Math.max(a[0], b[0]) + 4 ? Math.abs(p.y - a[1]) : 1e9; else if (a[0] === b[0]) d = p.y >= Math.min(a[1], b[1]) - 4 && p.y <= Math.max(a[1], b[1]) + 4 ? Math.abs(p.x - a[0]) : 1e9; else d = 1e9; if (d <= bd) { bd = d; best = i; } } return best; }
+    function moveSeg(w, si, d) { // décale le segment n°si perpendiculairement ; les extrémités du fil restent sur leurs bornes
+      let pts = w.pts.map((q) => q.slice()); const horiz = pts[si][1] === pts[si + 1][1];
+      if (si === 0) { pts.unshift(pts[0].slice()); si++; }
+      if (si + 1 === pts.length - 1) pts.push(pts[pts.length - 1].slice());
+      [si, si + 1].forEach((i) => { if (horiz) pts[i][1] += d; else pts[i][0] += d; });
+      w.pts = pts; normalize(w);
     }
     function onMove(e) {
       if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -277,6 +290,10 @@
         const dx = EE.snap(w.x - drag.start.x), dy = EE.snap(w.y - drag.start.y);
         if (dx === drag.dx && dy === drag.dy) return; drag.dx = dx; drag.dy = dy; drag.moved = dx !== 0 || dy !== 0;
         doc = JSON.parse(JSON.stringify(drag.base)); if (drag.moved) transformComps(doc, drag.ids, (c) => { c.x += dx; c.y += dy; }); render();
+      } else if (drag.type === 'seg') {
+        const bw = drag.base.wires.find((x) => x.id === drag.wid); if (!bw) return; const a = bw.pts[drag.si], b = bw.pts[drag.si + 1];
+        const d = a[1] === b[1] ? EE.snap(w.y - drag.start.y) : EE.snap(w.x - drag.start.x); if (d === drag.d) return; drag.d = d; drag.moved = d !== 0;
+        doc = JSON.parse(JSON.stringify(drag.base)); if (d) moveSeg(doc.wires.find((x) => x.id === drag.wid), drag.si, d); render();
       } else if (drag.type === 'box') { drag.cur = w; const x1 = Math.min(drag.start.x, w.x), y1 = Math.min(drag.start.y, w.y); overlay.innerHTML += ''; render(); overlay.insertAdjacentHTML('beforeend', `<rect class="selbox" x="${x1}" y="${y1}" width="${Math.abs(w.x - drag.start.x)}" height="${Math.abs(w.y - drag.start.y)}"/>`); }
     }
     function onUp(e) {
@@ -284,7 +301,7 @@
       if (simHold) { if (simObj) simObj.release(simHold); simHold = null; render(); opt.onSimChange && opt.onSimChange(simObj); }
       if (!drag) return;
       const d = drag; drag = null;
-      if (d.type === 'move') { if (d.moved) commit(); else { doc = JSON.parse(JSON.stringify(d.base)); render(); } }
+      if (d.type === 'move' || d.type === 'seg') { if (d.moved) commit(); else { doc = JSON.parse(JSON.stringify(d.base)); render(); } }
       else if (d.type === 'box') {
         const x1 = Math.min(d.start.x, d.cur.x), y1 = Math.min(d.start.y, d.cur.y), x2 = Math.max(d.start.x, d.cur.x), y2 = Math.max(d.start.y, d.cur.y);
         const cs = doc.comps.filter((c) => { const b = Lib.bbox(c); return b.x1 >= x1 && b.x2 <= x2 && b.y1 >= y1 && b.y2 <= y2; }).map((c) => c.id);
@@ -308,6 +325,8 @@
       else if (k === 'Escape') { if (drawing) { drawing = null; render(); } else { armed = null; setTool('select'); } }
       else if (k === 'Enter') { if (drawing) finishWire(); }
       else if (!ctrl && k.toLowerCase() === 'r') { rotate(); }
+      else if (!ctrl && k.toLowerCase() === 'm') { flipSel(); }
+      else if (ctrl && k.toLowerCase() === 'x') { e.preventDefault(); if (copy()) del(); }
       else if (!ctrl && k.toLowerCase() === 'w') { setTool('wire'); }
       else if (!ctrl && k.toLowerCase() === 'v') { setTool('select'); }
       else if (!ctrl && k.toLowerCase() === 'x') { flip = !flip; render(); }
@@ -326,10 +345,12 @@
       render, setTool, arm, undo, redo, copy, paste, duplicate, del, rotate, selectAll, select, updateSelected,
       startSim() { if (simObj) return simObj; drawing = null; armed = null; tool = 'select'; sel = { c: new Set(), w: new Set() }; markers = []; notifySel();
         simObj = EE.Sim.create(doc); simObj.solve();
-        simTimer = setInterval(() => { const ch = simObj.tick(0.1); opt.onSimTick && opt.onSimTick(simObj); if (ch) render(); }, 100);
+        simPaused = false; simTimer = setInterval(() => { if (simPaused) return; const ch = simObj.tick(0.1); opt.onSimTick && opt.onSimTick(simObj); if (ch) render(); }, 100);
         render(); opt.onSim && opt.onSim(true, simObj); return simObj; },
       stopSim() { if (!simObj) return; clearInterval(simTimer); simObj = null; simHold = null; render(); opt.onSim && opt.onSim(false, null); },
-      get sim() { return simObj; },
+      get sim() { return simObj; }, get simPaused() { return simPaused; },
+      pauseSim(on) { if (!simObj) return false; simPaused = on == null ? !simPaused : !!on; opt.onSimPause && opt.onSimPause(simPaused); return simPaused; },
+      flip: flipSel, cut() { if (copy()) { del(); return true; } return false; },
       setZoom: (k) => zoomAt(Math.max(0.2, Math.min(4, k)) / v.k), zoomIn: () => zoomAt(1.25), zoomOut: () => zoomAt(0.8), fit, centerOn, verify, focusIssue, clearMarkers,
       mutate(fn) { const r = fn(doc); commit(); return r; }, addComp, addWire, commit, finishWire, key, flipElbow() { flip = !flip; render(); },
       get selection() { return { comps: doc.comps.filter((c) => sel.c.has(c.id)), wires: doc.wires.filter((w) => sel.w.has(w.id)) }; },

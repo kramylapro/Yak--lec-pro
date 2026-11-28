@@ -75,7 +75,7 @@
     { k: 'contingencyPct', label: 'Imprévus (en % du total)', unit: '%' },
   ];
   const DEFAULTS = {
-    brand: { name1: 'Yak-élec-', name2: 'pro', slogan: 'Dessin et analyse de schémas électriques', welcome: 'dessinez, vérifiez, simulez et chiffrez vos installations électriques.', company: 'Yak-Élec – Installation & dépannage électrique', contact: '', owner: { name: '', email: 'kramylapro@gmail.com', phone: '+224 620 409 093' }, color: '#0b3d6b', accent: '#1769d1', logo: null },
+    brand: { name1: 'Yak-élec-', name2: 'pro', slogan: 'Dessin et analyse de schémas électriques', welcome: 'dessinez, vérifiez, simulez et chiffrez vos installations électriques.', about: 'Yak-élec-pro est une application de conception, de simulation et d’apprentissage des schémas électriques, pensée pour les électriciens, les techniciens, les enseignants et les élèves (CAP Électricité du bâtiment).\nOn y dessine des schémas développés, unifilaires, multifilaires et des plans architecturaux avec une bibliothèque de plus de 120 symboles simplifiés d’après la NF EN 60617 ; l’application vérifie les raccordements (courts-circuits, circuits ouverts, bornes libres, terre) et simule le fonctionnement : lampes, moteurs, contacteurs, temporisations, automates, avec les tensions et courants calculés.\nElle calcule aussi le quantitatif et le coffret d’une installation, dimensionne une installation photovoltaïque, propose des calculs électriques (loi d’Ohm, puissances, chute de tension…), 12 exemples de circuits commentés et un mode pédagogique (cours, quiz, exercices corrigés automatiquement).\nElle fonctionne sans Internet, sur ordinateur (Windows) et sur téléphone (Android), et enregistre les comptes et les projets sur l’appareil. Les normes citées et les valeurs par défaut sont indicatives : elles doivent être vérifiées sur les textes en vigueur avant toute installation réelle.\nCe portail permet à l’administrateur de modifier l’application sans programmer : apparence et textes, catalogue et prix, règles de calcul, photovoltaïque, fiches des symboles, sauvegarde et contrôle à distance.', company: 'Yak-Élec – Installation & dépannage électrique', contact: '', owner: { name: '', email: 'kramylapro@gmail.com', phone: '+224 620 409 093' }, color: '#0b3d6b', accent: '#1769d1', logo: null },
     currency: 'GNF',
     rules: { mode: 'encastre', lightPerCircuit: 8, lightBreaker: 10, lightSection: 1.5, socketsPerCircuit: 8, socketBreaker: 20, socketSection: 2.5, diffRating: 40, diffSens: 30, diffMaxCircuits: 8, separateLightDiff: true, mainInCoffret: true, surge: false, diversity: 0.6, reservePct: 20, modulesPerRowFallback: 13, wastePct: 10, switchHeight: 1.1, socketHeight: 0.3, earthCable: 10, earthSection: 16, labourPct: 0, contingencyPct: 0 },
     specials: [
@@ -192,6 +192,7 @@
         const o = c.library[d.id] || {}; d.desc = o.desc || d._orig.desc; d.notes = o.notes || d._orig.notes; d.ref = o.ref || d._orig.ref;
       });
     },
+    aboutText() { const b = Config.get().brand || {}; return (b.about && b.about.trim()) ? b.about : DEFAULTS.brand.about; },
     money(v) { const c = Config.get().currency; return Math.round(v).toLocaleString('fr-FR').replace(/ /g, ' ') + ' ' + c; },
   };
   function merge(base, o) {

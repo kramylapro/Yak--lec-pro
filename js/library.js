@@ -139,7 +139,7 @@
     add(arr, cat) { arr.forEach((d) => { d.params = d.params || {}; byId[d.id] = d; defs.push(d); }); },
     // Bornes en coordonnées monde
     rot(x, y, rot) { const r = ((rot % 360) + 360) % 360; if (r === 90) return [-y, x]; if (r === 180) return [-x, -y]; if (r === 270) return [y, -x]; return [x, y]; },
-    termWorld(c, tm) { const [rx, ry] = this.rot(tm.x, tm.y, c.rot || 0); return { x: Math.round(c.x + rx), y: Math.round(c.y + ry) }; },
+    termWorld(c, tm) { const [rx, ry] = this.rot(c.flip ? -tm.x : tm.x, tm.y, c.rot || 0); return { x: Math.round(c.x + rx), y: Math.round(c.y + ry) }; },
     sources(c) { const d = byId[c.type]; if (d.srcFn) return d.srcFn(c); return d.src || null; },
     newComp(type, x, y) {
       const d = byId[type];
@@ -147,8 +147,8 @@
     },
     // Boîte englobante en coordonnées monde (avec rotation)
     bbox(c) {
-      const d = byId[c.type]; const [a, b, e, f] = d.bbox;
-      const pts = [[a, b], [e, b], [e, f], [a, f]].map(([x, y]) => this.rot(x, y, c.rot || 0));
+      const d = byId[c.type]; const [a, b, e, f] = d.bboxFn ? d.bboxFn(c) : d.bbox;
+      const pts = [[a, b], [e, b], [e, f], [a, f]].map(([x, y]) => this.rot(c.flip ? -x : x, y, c.rot || 0));
       const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
       return { x1: c.x + Math.min(...xs), y1: c.y + Math.min(...ys), x2: c.x + Math.max(...xs), y2: c.y + Math.max(...ys) };
     },

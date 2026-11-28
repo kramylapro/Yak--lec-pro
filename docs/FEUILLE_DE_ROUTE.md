@@ -20,3 +20,16 @@ Inversion de sens (2 contacteurs), étoile-triangle, temporisation au repos, sen
 
 ## Après V1.2
 Génération automatique du schéma unifilaire du tableau à partir du quantitatif, calcul de chute de tension et de puissance, installation triphasée, création de nouveaux symboles par formulaire, hébergement en ligne avec comptes partagés.
+
+
+## Après V1.10
+- Temporisations et compteurs internes de l'automate (TON/TOF, CTU) et langage à contacts (Ladder) ; entrées/sorties analogiques.
+- Simulation du sens de conduction des diodes, calcul des courants réels dans un réseau maillé (lois de Kirchhoff) au lieu des valeurs nominales.
+- Classes en ligne (serveur) pour remplacer l'échange de fichiers exercices / copies ; synchronisation ordinateur ↔ téléphone.
+- PDF vectoriel (texte sélectionnable) ; import DXF ; bibliothèque de symboles créés par l'utilisateur dans le portail.
+
+## Après V1.11 (Bureau d'études BT)
+- Tables de sélectivité / filiation importables en CSV depuis les documents des fabricants.
+- Courbes temps-courant réelles des appareils (import fabricant) et sélectivité énergétique.
+- Calcul des Icc selon la CEI 60909 complète (transformateur, groupe électrogène, câbles en parallèle) ; conducteur PE de section réduite.
+- Implantation glisser-déposer des appareils dans la vue 2D ; vue 3D texturée.

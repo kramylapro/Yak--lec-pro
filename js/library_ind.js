@@ -42,7 +42,7 @@
       notes: 'Le repère (KM1) sert aussi à relier les contacts auxiliaires « KM1 » dessinés ailleurs sur le schéma.',
       body: (c, m, st) => poles(st && st.closed, false).replace(L(-27, 2, 13, 2, DASH), '') + L(-27, 2, 48, 2, DASH) + L(60, -40, 60, -20) + L(60, 20, 60, 40) + R(48, -20, 24, 40) + T(60, 4, 'KM', 10),
       fx: coilFx(48, -20, 24, 40), ref: RI },
-    { id: 'relais_thermique', name: 'Relais thermique', cat: 'Industriel – puissance', prefix: 'F', params: { val: true }, term: T6().concat([t('95', 60, -40), t('96', 60, 40), t('97', 80, -40, { opt: true }), t('98', 80, 40, { opt: true })]),
+    { id: 'relais_thermique', name: 'Relais thermique', cat: 'Industriel – puissance', prefix: 'F', params: { val: true }, term: T6().concat([t('95', 60, -40, { opt: true }), t('96', 60, 40, { opt: true }), t('97', 80, -40, { opt: true }), t('98', 80, 40, { opt: true })]),
       sw: E3.concat([['95', '96'], ['97', '98']]), bbox: [-30, -40, 90, 40],
       desc: 'Protection contre les surcharges du moteur : 3 éléments bimétalliques en série dans la puissance et un contact auxiliaire NF (95-96) à placer dans le circuit de commande ; contact NO (97-98) pour la signalisation de défaut.',
       notes: 'En simulation, cliquer sur le relais pour simuler une surcharge : le contact 95-96 s\'ouvre et coupe la bobine du contacteur. Cliquer de nouveau pour réarmer. Régler l\'intensité (ex. 6,3 A) dans « Valeur ».',

@@ -171,3 +171,32 @@ Tests S1–S20 : formules (énergie, batteries, panneaux), chaînes (tension à 
 
 ## Section X – Contrôle à distance (`tests/remote_tests.py`, 27 tests)
 X1–X3 identifiant/URL/état libre · X4–X6 blocage général et déblocage · X7–X10 appareil/compte · X11–X12 hors ligne et réessai · X13–X16 bandeau de mise à jour · X17 version minimale · X18 délai hors ligne · X19 versions · X20 fichier invalide · X21–X24 portail (formulaire, aperçu) · X25–X26 publication GitHub simulée, jeton non stocké · X27 aucune erreur JS. Le portail est ouvert par contournement de test (mot de passe admin non utilisé).
+
+
+## Section W – V1.10 (`tests/v110_tests.py`, 49 tests, tous réussis sur index.html et dist/yak-elec-pro.html)
+W1 nouveaux symboles et catégories · W2 simulation : tempo repos, compteur, automate (programme), jeu de barres/borne, tensions et courants · W3 12 exemples : sans erreur, fonctionnement simulé conforme, 5 parties, écran, ouverture dans l'atelier · W4 menus (7), Tout sélectionner, miroir, annotations, déplacement de segment, feuilles multiples (ajout, changement, enregistrement, rechargement) · W5 pause / reprise, tensions et courants · W6 DXF, mise en page A2/A3/A4, cartouche, PDF multipage, échelle 1:50 · W7 verrouillage reconnu / manquant · W8 calculs (valeurs vérifiées à la main) · W9 dossiers · W10 cours, quiz, correction automatique (20/20, note partielle, 0), circuit guidé, remise, exercice enseignant, export, copies, recorrection, import · W11 téléphone 390 px · W12 aucune erreur JavaScript.
+Batterie historique `run_tests.py` : 228 tests réussis (tests C1, C4, C5, D16, P5, S17 mis à jour : nombre de symboles, d'onglets du portail et de batteries devenus plus grands, feuille plus basse à cause de la barre de menus). `remote_tests.py` : 27/27. `ux_tests.py` : sans erreur.
+
+V1.10.1 : section W13 ajoutée (barre d'outils sur une ligne, 3 sous-fenêtres, réduire / agrandir / restaurer, double-clic, mémorisation, rétablir) → `v110_tests.py` 57/57 ; `run_tests.py` 228/228 ; `remote_tests.py` 27/27.
+
+V1.10.2 : section W14 (onglet déroulant Matériel, sous-titres lisibles) → `v110_tests.py` 63/63 ; `run_tests.py` 228/228 (accès au Quantitatif et aux Composants par l'onglet Matériel) ; `remote_tests.py` 27/27.
+
+V1.10.3 : section W15 (Accueil déroulant : page d'accueil, paramètres, portail réservé à l'administrateur, déconnexion) → `v110_tests.py` 69/69 ; `run_tests.py` 228/228 (déconnexion, paramètres et portail ouverts par l'onglet Accueil) ; `remote_tests.py` 27/27.
+
+V1.10.4 : section W16 (contenu affiché au clic sur un onglet ou un sous-titre, présentation dans le portail, modifiable) → `v110_tests.py` 75/75 ; `run_tests.py` 228/228 ; `remote_tests.py` 27/27.
+
+V1.10.5 : section W17 (contenus empilés, saut vers un sous-titre, indépendance des parties, Accueil avec ou sans portail) → `v110_tests.py` 81/81 ; `run_tests.py` 228/228 (test Q4 ciblé sur la partie Composants) ; `remote_tests.py` 27/27.
+
+V1.10.6 : test W18 (contenu des sous-titres en liste verticale) → `v110_tests.py` 82/82 ; `run_tests.py` 228/228 ; `remote_tests.py` 27/27.
+
+V1.10.7 : test W19 (schéma entier dans la fiche, zoom, plein écran) → `v110_tests.py` 83/83 ; `run_tests.py` 228/228 ; `remote_tests.py` 27/27.
+
+V1.11.0 : nouvelle série `tests/bt_tests.py` (BT1 à BT23, 32 tests : assistant, interface, arborescence, annuler / rétablir, calculs, 13 onglets, note de calcul, répartition, enveloppes, 2D, 3D, sélectivité, chiffrage, Excel, CSV, bibliothèque, dossier, étiquettes, unifilaire généré, import / archivage, mobile) → 32/32 ; `run_tests.py` 228/228 ; `v110_tests.py` 83/83 ; `remote_tests.py` 27/27.
+
+
+## V1.12 – Statistiques de connexion
+`python3 tests/stats_tests.py` : 21 tests (signal, données envoyées, lecture réservée, tableau de bord, CSV, control.json). Firebase est simulé : aucun accès Internet.
+
+
+## V1.13 – Téléchargement Android
+`python3 build.py && python3 tests/android_dl_tests.py` : 14 tests (bouton sur le site seulement, fenêtre d'installation, adresse de l'APK, page android.html, champ du portail).

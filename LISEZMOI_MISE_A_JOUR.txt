@@ -1,0 +1,16 @@
+MISE A JOUR YAK-ELEC-PRO V1.13.0 - a glisser dans GitHub
+=========================================================
+1. Ouvrez votre depot sur github.com > bouton "Add file" > "Upload files".
+2. Glissez TOUT le contenu de ce dossier (les dossiers js, css, docs, tests, android, desktop, .github
+   et les fichiers .md / index.html / build.py) : GitHub remplace les anciens fichiers et ajoute les nouveaux.
+   ATTENTION : le dossier ".github" commence par un point ; sous Windows il peut etre cache. S'il n'est pas
+   envoye, ouvrez .github/workflows/android.yml sur GitHub (crayon) et collez le nouveau contenu.
+   (Ce fichier LISEZMOI_MISE_A_JOUR.txt n'a pas besoin d'etre envoye.)
+3. Cliquez sur "Commit changes".
+4. Le site se reconstruit tout seul (onglet Actions) et l'APK Android aussi : il est publie dans
+   "Releases > android" du depot. Le depot doit etre PUBLIC pour que tout le monde puisse le telecharger.
+5. Votre fichier site/control.json n'est pas touche.
+Contient aussi la V1.12.0 (onglet Connexions) et la V1.11.1 (correctif).
+
+Nouveau dans la V1.13.0 : bouton "Telecharger l'application Android" sur le site, page android.html
+a partager. Guide : docs/GUIDE_ANDROID.md (dont la signature de l'APK, conseillee).

@@ -24,14 +24,15 @@
     let body = d.body(c, mode, st);
     if (d.extra && d.extra[mode]) body += d.extra[mode](c);
     const fx = st && d.fx ? d.fx(c, st) || {} : {};
-    const bb = d.bbox;
+    const bb = d.bboxFn ? d.bboxFn(c) : d.bbox;
+    if (c.flip) body = body.replace(/<text x="(-?[0-9.]+)"([^>]*?)text-anchor="(start|end|middle)"/g, (m, x, mid, a) => `<text transform="scale(-1,1)" x="${-parseFloat(x)}"${mid}text-anchor="${a === 'start' ? 'end' : a === 'end' ? 'start' : 'middle'}"`);
     const hit = opts.hit ? `<rect x="${bb[0]}" y="${bb[1]}" width="${bb[2] - bb[0]}" height="${bb[3] - bb[1]}" fill="transparent" stroke="none"/>` : '';
-    let s = `<g data-cid="${c.id}"><g transform="translate(${c.x},${c.y}) rotate(${c.rot || 0})">${hit}${fx.u || ''}<g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</g>${fx.o || ''}</g>`;
+    let s = `<g data-cid="${c.id}"><g transform="translate(${c.x},${c.y}) rotate(${c.rot || 0})${c.flip ? ' scale(-1,1)' : ''}">${hit}${fx.u || ''}<g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</g>${fx.o || ''}</g>`;
     if (st && st.tripped) { const bb2 = Lib.bbox(c); s += `<g><circle cx="${bb2.x2 + 4}" cy="${bb2.y1 + 8}" r="9" fill="#e53935" stroke="none"/><text x="${bb2.x2 + 4}" y="${bb2.y1 + 12}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" stroke="none">!</text></g>`; }
     if (mode !== 'unifilaire' && mode !== 'architectural' && opts.termNames !== false) s += termLabels(c, d);
     // identification + valeur, à droite du composant (jamais pivotées)
     const b = Lib.bbox(c);
-    if (!['connexion', 'croisement', 'conducteur', 'p_etiquette'].includes(c.type)) {
+    if (!['connexion', 'croisement', 'conducteur', 'p_etiquette'].includes(c.type) && !d.annot) {
       const lx = b.x2 + 6, ly = (b.y1 + b.y2) / 2;
       const lab = c.label ? `<text x="${lx}" y="${ly}" font-size="12" font-weight="700" fill="currentColor" stroke="none" font-family="Arial,sans-serif">${esc(c.label)}</text>` : '';
       const showVal = c.val && !['phase', 'neutre', 'terre'].includes(c.type);

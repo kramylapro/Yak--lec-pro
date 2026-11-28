@@ -4,15 +4,17 @@
   const EE = g.EE, esc = EE.esc, C = () => EE.Config;
   const ui = () => EE.app.ui, $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
   let tab = 'look';
-  const TABS = [['look', '🎨 Apparence et textes'], ['cat', '📦 Catalogue et prix'], ['rules', '📐 Règles de calcul'], ['pv', '☀️ Photovoltaïque'], ['sym', '🔣 Fiches des symboles'], ['save', '💾 Sauvegarde et mise à jour'], ['remote', '📡 Contrôle à distance']];
+  const TABS = [['look', '🎨 Apparence et textes'], ['cat', '📦 Catalogue et prix'], ['rules', '📐 Règles de calcul'], ['pv', '☀️ Photovoltaïque'], ['sym', '🔣 Fiches des symboles'], ['save', '💾 Sauvegarde et mise à jour'], ['remote', '📡 Contrôle à distance'], ['stats', '👥 Connexions']];
 
+  // texte descriptif de l'application (modifiable dans « Apparence et textes »)
+  const aboutCard = () => `<section class="card flat about"><h2>📘 À propos de ${esc(C().get().brand.name1 + C().get().brand.name2)} <small class="muted">V${esc(EE.VERSION)}</small></h2>${C().aboutText().split('\n').map((t) => t.trim()).filter(Boolean).map((t) => `<p>${esc(t)}</p>`).join('')}</section>`;
   function renderPortal() {
     const u = EE.Store.Users.current();
-    const box = (inner) => ($('#main').innerHTML = `<div class="page narrow">${inner}</div>`);
+    const box = (inner) => (EE.main('portal').innerHTML = `<div class="page narrow">${inner}</div>`);
     if (!C().isAdmin(u)) { box('<section class="card flat"><p>Accès refusé.</p></section>'); return; }
     if (!EE.portalUnlocked) {
-      box(`<h1>🛠️ Portail administrateur</h1><section class="card flat"><p>Zone protégée. Entrez le mot de passe administrateur.</p>${ui().pwField('pp', 'Mot de passe administrateur')}<p class="err" id="perr"></p><button class="btn primary" id="punlock">Entrer dans le portail</button></section>`);
-      ui().bindEyes($('.page'));
+      box(`<h1>🛠️ Portail administrateur</h1>${aboutCard()}<section class="card flat"><p>Zone protégée. Entrez le mot de passe administrateur.</p>${ui().pwField('pp', 'Mot de passe administrateur')}<p class="err" id="perr"></p><button class="btn primary" id="punlock">Entrer dans le portail</button></section>`);
+      ui().bindEyes(EE.main('portal'));
       const go = () => {
         if (Date.now() < (EE.portalLockUntil || 0)) { $('#perr').textContent = 'Trop d\'essais : patientez quelques secondes.'; return; }
         if (C().checkAdminPassword($('#pp').value)) { EE.portalUnlocked = true; EE.portalFails = 0; C().log('Entrée dans le portail'); renderPortal(); return; }
@@ -22,12 +24,12 @@
       $('#punlock').onclick = go; $('#pp').onkeydown = (e) => { if (e.key === 'Enter') go(); };
       return;
     }
-    $('#main').innerHTML = `<div class="page"><div class="bar"><h1>🛠️ Portail administrateur</h1><div class="grow"></div><button class="btn small" id="plock">🔒 Verrouiller</button></div>
-      <p class="muted">Modifiez l'application avec de simples formulaires : aucune programmation. Les changements s'appliquent immédiatement sur cet appareil ; pour les mettre sur un autre appareil, utilisez « Sauvegarde et mise à jour ».</p>
+    EE.main('portal').innerHTML = `<div class="page"><div class="bar"><h1>🛠️ Portail administrateur</h1><div class="grow"></div><button class="btn small" id="plock">🔒 Verrouiller</button></div>
+      ${aboutCard()}<p class="muted">Modifiez l'application avec de simples formulaires : aucune programmation. Les changements s'appliquent immédiatement sur cet appareil ; pour les mettre sur un autre appareil, utilisez « Sauvegarde et mise à jour ».</p>
       <div class="chips ptabs">${TABS.map(([k, l]) => `<button class="chip${k === tab ? ' on' : ''}" data-t="${k}">${l}</button>`).join('')}</div><div id="pbody"></div></div>`;
     $('#plock').onclick = () => { EE.portalUnlocked = false; EE.app.go('home'); };
     $$('.ptabs .chip').forEach((b) => (b.onclick = () => { tab = b.dataset.t; renderPortal(); }));
-    ({ look, cat: catalogue, rules, pv: pvTab, sym: symbols, save: backup, remote: remoteTab })[tab]($('#pbody'));
+    ({ look, cat: catalogue, rules, pv: pvTab, sym: symbols, save: backup, remote: remoteTab, stats: statsTab })[tab]($('#pbody'));
   }
 
   // ---------- 1. Apparence ----------
@@ -37,6 +39,7 @@
       <div class="two"><label>Nom de l'application (partie normale)<input id="b1" value="${esc(b.name1)}"></label><label>Nom (partie colorée)<input id="b2" value="${esc(b.name2)}"></label></div>
       <label>Slogan (écran de connexion)<input id="bs" value="${esc(b.slogan)}"></label>
       <label>Message d'accueil (après « Bonjour … – »)<input id="bw" value="${esc(b.welcome)}"></label>
+      <label>Texte de présentation de l'application (affiché en haut du portail ; un paragraphe par ligne)<textarea id="bab" rows="7">${esc(C().aboutText())}</textarea></label>
       <label>Entreprise / établissement (en-tête des devis imprimés)<input id="bc" value="${esc(b.company)}"></label>
       <label>Contact (téléphone, adresse, e-mail)<input id="bt" value="${esc(b.contact)}"></label>
       <h4>Page « Contact » (vos coordonnées)</h4>
@@ -48,7 +51,7 @@
         <div class="btnrow"><label class="btn" for="lfile">Choisir une image (PNG, JPG)…</label><input id="lfile" type="file" accept="image/*" class="hide"><button class="btn" id="lreset">Rétablir le logo d'origine</button></div>
         <p class="small muted">Conseil : image sur fond transparent (PNG), largeur d'au moins 400 pixels.</p></section>
       <div class="btnrow"><button class="btn primary" id="lsave">Enregistrer l'apparence</button><button class="btn" id="lrst">Tout rétablir (apparence)</button></div>`;
-    $('#lsave').onclick = () => { C().set((c) => { Object.assign(c.brand, { name1: $('#b1').value, name2: $('#b2').value, slogan: $('#bs').value, welcome: $('#bw').value, company: $('#bc').value, contact: $('#bt').value, owner: { name: $('#on').value.trim(), email: $('#oe').value.trim(), phone: $('#op').value.trim() }, color: $('#bcol').value, accent: $('#bacc').value }); c.currency = $('#bm').value.trim() || 'GNF'; }, 'Apparence et textes modifiés'); ui().toast('Apparence enregistrée', 'ok'); renderPortalShell(); };
+    $('#lsave').onclick = () => { C().set((c) => { Object.assign(c.brand, { name1: $('#b1').value, name2: $('#b2').value, slogan: $('#bs').value, welcome: $('#bw').value, about: $('#bab').value, company: $('#bc').value, contact: $('#bt').value, owner: { name: $('#on').value.trim(), email: $('#oe').value.trim(), phone: $('#op').value.trim() }, color: $('#bcol').value, accent: $('#bacc').value }); c.currency = $('#bm').value.trim() || 'GNF'; }, 'Apparence et textes modifiés'); ui().toast('Apparence enregistrée', 'ok'); renderPortalShell(); };
     $('#lrst').onclick = async () => { if (await ui().confirmBox('Rétablir l\'apparence', 'Remettre le nom, les textes, les couleurs et le logo d\'origine ?', 'Rétablir')) { C().reset('brand'); renderPortalShell(); } };
     $('#lreset').onclick = () => { C().set((c) => (c.brand.logo = null), 'Logo d\'origine rétabli'); renderPortalShell(); };
     $('#lfile').onchange = (e) => {
@@ -153,7 +156,7 @@
 
 
   // ---------- 6. Contrôle à distance ----------
-  const RF = { blocked: false, message: '', devices: '', users: '', latest: '', url: '', notes: '', min: '', offline: '', owner: '', repo: '', branch: 'main', path: 'site/control.json' };
+  const RF = { blocked: false, message: '', devices: '', users: '', latest: '', url: '', notes: '', min: '', offline: '', owner: '', repo: '', branch: 'main', path: 'site/control.json', statsUrl: '', statsKey: '', apk: '' };
   function remoteTab(el) {
     const R = EE.Remote, st = R.state(), url = R.controlURL(), cfgR = C().get().remote || {};
     const m = /raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+?)(\?|$)/.exec(url || ''); if (m && !RF.owner) Object.assign(RF, { owner: m[1], repo: m[2], branch: m[3], path: m[4] });
@@ -161,8 +164,8 @@
       const o = {}; o.blocked = !!RF.blocked; if (RF.message.trim()) o.message = RF.message.trim();
       const lines = (t) => t.split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean);
       if (lines(RF.devices).length) o.blockedDevices = lines(RF.devices); if (lines(RF.users).length) o.blockedUsers = lines(RF.users);
-      if (RF.latest.trim()) o.latestVersion = RF.latest.trim(); if (RF.url.trim()) o.updateUrl = RF.url.trim(); if (RF.notes.trim()) o.updateNotes = RF.notes.trim();
-      if (RF.min.trim()) o.minVersion = RF.min.trim(); if (+RF.offline > 0) o.maxOfflineDays = +RF.offline; o.updated = new Date().toISOString();
+      if (RF.latest.trim()) o.latestVersion = RF.latest.trim(); if (RF.url.trim()) o.updateUrl = RF.url.trim(); if (RF.notes.trim()) o.updateNotes = RF.notes.trim(); if (/^https:\/\/\S+$/i.test(RF.apk.trim())) o.androidUrl = RF.apk.trim();
+      if (RF.min.trim()) o.minVersion = RF.min.trim(); if (+RF.offline > 0) o.maxOfflineDays = +RF.offline; if (EE.Stats && EE.Stats.cleanUrl(RF.statsUrl)) { o.statsUrl = EE.Stats.cleanUrl(RF.statsUrl); if (RF.statsKey.trim()) o.statsKey = RF.statsKey.trim(); } o.updated = new Date().toISOString();
       return o;
     };
     const lab = (t, inner, h) => `<label>${t}${inner}${h ? `<small>${h}</small>` : ''}</label>`;
@@ -178,7 +181,9 @@
         <div class="two">${lab('Appareils à bloquer (identifiants, un par ligne)', '<textarea id="fd" rows="3" placeholder="YE-AB12-CD34"></textarea>', 'L\'identifiant s\'affiche sur l\'écran de blocage et dans cet onglet.')}${lab('Comptes à bloquer (noms d\'utilisateur)', '<textarea id="fu" rows="3"></textarea>')}</div>
         <h4>Proposer une mise à jour</h4><div class="two">${lab('Dernière version disponible', '<input id="fl" placeholder="ex. 1.9.0">')}${lab('Lien de téléchargement', '<input id="fx" placeholder="https://…">')}</div>
         ${lab('Nouveautés (texte affiché)', '<input id="fn" placeholder="Nouvelles fonctions : …">')}
+        ${lab('📱 Lien de téléchargement de l\'application Android (facultatif)', `<input id="fa" placeholder="${esc(EE.AndroidDL ? EE.AndroidDL.DEFAULT_URL : '')}">`, 'Vide = APK publié automatiquement par GitHub (Release « android »). Bouton visible sur le site, écran de connexion et Paramètres.')}
         <div class="two">${lab('Version minimale autorisée (mise à jour obligatoire en dessous)', '<input id="fv" placeholder="vide = aucune">')}${lab('Blocage si aucune connexion Internet depuis (jours)', '<input id="fo" type="number" min="0" placeholder="0 = désactivé">', 'Attention : bloque aussi les élèves sans Internet.')}</div>
+        ${RF.statsUrl ? `<p class="small">👥 Statistiques de connexion incluses : <b>${esc(RF.statsUrl)}</b> (onglet « Connexions »).</p>` : '<p class="small muted">👥 Pour compter les personnes connectées, configurez d\'abord l\'onglet « Connexions » : son adresse sera ajoutée à ce fichier.</p>'}
         <label>Contenu du fichier <code>control.json</code><textarea id="fj" rows="9" readonly style="font-family:monospace;font-size:.82rem"></textarea></label>
         <div class="btnrow"><button class="btn primary" id="fcopy">Copier</button><button class="btn" id="fdl">Télécharger control.json</button><button class="btn" id="fprev">👁 Aperçu de l'écran de blocage</button></div></section>
       <section class="card flat"><h2>Publier sur GitHub (depuis n'importe quel appareil)</h2><p class="small muted">Écrit le fichier directement dans votre dépôt GitHub. Le jeton (clé d'accès personnelle) n'est <b>jamais enregistré</b> : il reste en mémoire le temps de l'envoi. Créez-le dans GitHub › Settings › Developer settings › Fine-grained tokens, limité à ce dépôt avec la permission « Contents : Read and write ». Voir le guide « Contrôle à distance ».</p>
@@ -187,12 +192,12 @@
         ${lab('Jeton GitHub', '<input id="gt" type="password" autocomplete="off">')}
         <div class="btnrow"><button class="btn primary" id="gpub">🚀 Publier maintenant</button></div><p class="small" id="gmsg"></p></section>`;
     const sync = () => { $('#fj').value = JSON.stringify(gen(), null, 2); };
-    const map = { fb: 'blocked', fm: 'message', fd: 'devices', fu: 'users', fl: 'latest', fx: 'url', fn: 'notes', fv: 'min', fo: 'offline' };
+    const map = { fb: 'blocked', fm: 'message', fd: 'devices', fu: 'users', fl: 'latest', fx: 'url', fn: 'notes', fv: 'min', fo: 'offline', fa: 'apk' };
     Object.entries(map).forEach(([id, k]) => { const e = $('#' + id); if (e.type === 'checkbox') e.checked = !!RF[k]; else e.value = RF[k]; e.oninput = e.onchange = () => { RF[k] = e.type === 'checkbox' ? e.checked : e.value; sync(); }; });
     sync();
-    $('#rsave').onclick = () => { C().set((c) => { c.remote = { url: $('#rurl').value.trim(), minutes: Math.max(1, +$('#rmin').value || 15) }; }, 'Contrôle à distance : réglages'); ui().toast('Réglages enregistrés', 'ok'); remoteTab(el); };
+    $('#rsave').onclick = () => { C().set((c) => { c.remote = Object.assign({}, c.remote, { url: $('#rurl').value.trim(), minutes: Math.max(1, +$('#rmin').value || 15) }); }, 'Contrôle à distance : réglages'); ui().toast('Réglages enregistrés', 'ok'); remoteTab(el); };
     $('#rcheck').onclick = async () => { const r = await R.check(); ui().toast(r.ok ? 'Fichier de contrôle lu' : r.error === 'no-url' ? 'Aucune adresse configurée' : 'Échec : ' + r.error, r.ok ? 'ok' : 'bad'); remoteTab(el); };
-    $('#rload').onclick = async () => { const r = await R.check(); if (!r.ok) { ui().toast(r.error === 'no-url' ? 'Aucune adresse configurée' : 'Échec : ' + r.error, 'bad'); return; } const c = r.ctl; Object.assign(RF, { blocked: !!c.blocked, message: c.message || '', devices: (c.blockedDevices || []).join('\n'), users: (c.blockedUsers || []).join('\n'), latest: c.latestVersion || '', url: c.updateUrl || '', notes: c.updateNotes || '', min: c.minVersion || '', offline: c.maxOfflineDays || '' }); remoteTab(el); ui().toast('Fichier publié chargé', 'ok'); };
+    $('#rload').onclick = async () => { const r = await R.check(); if (!r.ok) { ui().toast(r.error === 'no-url' ? 'Aucune adresse configurée' : 'Échec : ' + r.error, 'bad'); return; } const c = r.ctl; Object.assign(RF, { blocked: !!c.blocked, message: c.message || '', devices: (c.blockedDevices || []).join('\n'), users: (c.blockedUsers || []).join('\n'), latest: c.latestVersion || '', url: c.updateUrl || '', notes: c.updateNotes || '', min: c.minVersion || '', offline: c.maxOfflineDays || '', statsUrl: c.statsUrl || RF.statsUrl, statsKey: c.statsKey || RF.statsKey, apk: c.androidUrl || '' }); remoteTab(el); ui().toast('Fichier publié chargé', 'ok'); };
     $('#fcopy').onclick = async () => { try { await navigator.clipboard.writeText($('#fj').value); ui().toast('Copié', 'ok'); } catch (e) { $('#fj').select(); ui().toast('Sélectionné : copiez avec Ctrl+C', 'info'); } };
     $('#fdl').onclick = () => EE.Export.download('control.json', new Blob([$('#fj').value], { type: 'application/json' }));
     $('#fprev').onclick = () => R.preview(gen());
@@ -209,6 +214,77 @@
         $('#gt').value = ''; msg.style.color = 'var(--ok)'; msg.textContent = '✔ Publié. Les copies connectées l\'appliqueront dans quelques minutes (délai du cache GitHub : environ 5 min).'; C().log && C().log('Contrôle à distance publié');
       } catch (e) { msg.style.color = 'var(--bad)'; msg.textContent = 'Échec : ' + (e.message || e); }
     };
+  }
+
+  // ---------- 7. Connexions (statistiques) ----------
+  let statsTimer = null, statsData = null;
+  function statsTab(el) {
+    const S = EE.Stats, c = S.cfg(), loc = C().get().remote || {}, lb = S.last();
+    if (!RF.statsUrl && c.url) RF.statsUrl = c.url; if (!RF.statsKey && c.key) RF.statsKey = c.key;
+    clearInterval(statsTimer);
+    const big = (n, t, cls) => `<div class="stbig ${cls || ''}"><b>${n}</b><span>${t}</span></div>`;
+    el.innerHTML = `<section class="card flat"><h2>👥 Personnes connectées</h2>
+        ${c.url ? `<p class="small">Base de statistiques : <b>${esc(c.url)}</b> <span class="muted">(source : ${esc(c.source)})</span></p>
+        <p class="small">Cet appareil : dernier signal ${lb.at ? EE.fmtDate(lb.at) + (lb.ok ? ' – <span style="color:var(--ok)">reçu</span>' : ' – <span style="color:var(--bad)">échec (' + esc(lb.error) + ')</span>') : 'pas encore envoyé'}.</p>
+        ${S.signedIn() ? `<div class="btnrow"><button class="btn primary" id="st-ref">↻ Actualiser</button><button class="btn" id="st-csv">⬇ Exporter (CSV)</button><button class="btn" id="st-out">Se déconnecter de Firebase</button></div><div id="st-res"><p class="muted">Chargement…</p></div>`
+          : `<p class="small muted">Entrez le mot de passe de votre compte Firebase (pas celui du portail). Il n'est jamais enregistré.</p>
+             <div class="two"><label>E-mail du compte Firebase<input id="st-mail" value="${esc(S.adminEmail())}"></label>${ui().pwField('st-pw', 'Mot de passe Firebase')}</div>
+             <div class="btnrow"><button class="btn primary" id="st-in">Afficher les connexions</button></div><p class="err" id="st-err"></p>`}`
+        : '<p>Aucune base de statistiques n\'est configurée. Suivez l\'installation ci-dessous (une seule fois, environ 10 minutes, gratuit).</p>'}
+      </section>
+      <section class="card flat"><h2>⚙️ Installation (une seule fois)</h2>
+        <ol class="small steps">
+          <li>Ouvrez <b>console.firebase.google.com</b> avec votre compte Google, puis <b>Créer un projet</b> (nom : yak-elec-pro). Google Analytics : non nécessaire.</li>
+          <li>Menu <b>Build › Authentication › Commencer</b> : activez <b>E-mail/Mot de passe</b>. Onglet <b>Users › Ajouter un utilisateur</b> : votre adresse e-mail administrateur et un mot de passe de votre choix.</li>
+          <li>Menu <b>Build › Realtime Database › Créer une base de données</b> (emplacement : Europe), en <b>mode verrouillé</b>. Copiez l'adresse affichée en haut (https://….firebasedatabase.app).</li>
+          <li>Onglet <b>Règles</b> de la base : remplacez tout le texte par celui ci-dessous, puis <b>Publier</b>. Seul votre compte pourra lire les connexions.</li>
+          <li>Icône ⚙️ <b>Paramètres du projet</b> : copiez la <b>Clé API Web</b>. Collez l'adresse et la clé ci-dessous, puis <b>Enregistrer</b>.</li>
+          <li>Onglet <b>📡 Contrôle à distance</b> : <b>Publier maintenant</b>. Toutes les copies (V1.12 et suivantes) connectées à Internet commenceront à envoyer leur signal.</li>
+        </ol>
+        <label>Règles de la base (étape 4)<textarea id="st-rules" rows="8" readonly style="font-family:monospace;font-size:.8rem">${esc(S.rules())}</textarea></label>
+        <div class="btnrow"><button class="btn" id="st-copy">Copier les règles</button></div>
+        <div class="two"><label>Adresse de la base (étape 3)<input id="st-url" value="${esc(RF.statsUrl || '')}" placeholder="https://yak-elec-pro-default-rtdb.europe-west1.firebasedatabase.app"></label><label>Clé API Web (étape 5)<input id="st-key" value="${esc(RF.statsKey || '')}" placeholder="AIza…"></label></div>
+        <div class="btnrow"><button class="btn primary" id="st-save">Enregistrer</button><button class="btn" id="st-test">Envoyer un signal de test</button></div><p class="small" id="st-msg"></p>
+        <p class="small muted">Données envoyées par chaque copie, toutes les minutes quand l'application est ouverte : identifiant d'appareil, nom d'utilisateur du compte ouvert, plateforme et version. Rien d'autre (aucun projet, aucun mot de passe). Les utilisateurs en sont informés sur l'écran de connexion. Limite : un signal n'arrive que si l'appareil est connecté à Internet ; les versions antérieures à la V1.12 n'envoient rien.</p>
+      </section>`;
+    const msg = (t, ok) => { const m = $('#st-msg'); if (m) { m.textContent = t; m.style.color = ok ? 'var(--ok)' : 'var(--bad)'; } };
+    $('#st-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#st-rules').value); ui().toast('Règles copiées', 'ok'); } catch (e) { $('#st-rules').select(); ui().toast('Sélectionné : copiez avec Ctrl+C', 'info'); } };
+    $('#st-save').onclick = () => {
+      const u = $('#st-url').value.trim(), k = $('#st-key').value.trim();
+      if (u && !S.cleanUrl(u)) { msg('Adresse non reconnue : elle doit ressembler à https://….firebasedatabase.app ou https://….firebaseio.com', false); return; }
+      RF.statsUrl = S.cleanUrl(u); RF.statsKey = k;
+      C().set((cf) => { cf.remote = Object.assign({}, cf.remote, { statsUrl: RF.statsUrl, statsKey: k }); }, 'Connexions : base de statistiques');
+      ui().toast('Enregistré. Pensez à publier le fichier de contrôle pour toutes les copies.', 'ok'); statsTab(el);
+    };
+    $('#st-test').onclick = async () => { msg('Envoi…', true); const r = await S.beat(); msg(r.ok ? '✔ Signal reçu par la base.' : (r.error === 'no-url' ? 'Enregistrez d\'abord l\'adresse de la base.' : 'Échec : ' + r.error + ' (vérifiez l\'adresse et les règles).'), r.ok); };
+    if (!c.url) return;
+    if (!S.signedIn()) {
+      ui().bindEyes(el);
+      const go = async () => { const e = $('#st-err'); e.textContent = 'Connexion…'; try { await S.signIn($('#st-mail').value.trim(), $('#st-pw').value); statsTab(el); } catch (er) { e.textContent = er.message; } };
+      $('#st-in').onclick = go; $('#st-pw').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+      return;
+    }
+    const show = async () => {
+      const box = $('#st-res'); if (!box) { clearInterval(statsTimer); return; }
+      try {
+        statsData = S.summary(await S.fetchAll());
+        const d = statsData, list = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<li>${esc(k)} : <b>${n}</b></li>`).join('') || '<li class="muted">—</li>';
+        box.innerHTML = `<div class="stgrid">${big(d.online, 'connectés maintenant', 'on')}${big(d.today, 'aujourd\'hui')}${big(d.week, '7 derniers jours')}${big(d.month, '30 derniers jours')}${big(d.total, 'appareils au total')}${big(d.newWeek, 'nouveaux (7 jours)')}</div>
+          <p class="small muted">Mis à jour : ${EE.fmtDate(Date.now())} – actualisation automatique toutes les 30 s. « Connecté » = application ouverte avec un signal depuis moins de 2 min 30 s.</p>
+          <div class="two"><div><h4>Connectés par plateforme</h4><ul class="small">${list(d.byPlatform)}</ul></div><div><h4>Versions utilisées (30 jours)</h4><ul class="small">${list(d.byVersion)}</ul></div></div>
+          <h4>Appareils</h4><div class="tblwrap"><table class="tbl small"><thead><tr><th>État</th><th>Utilisateur</th><th>Appareil</th><th>Plateforme</th><th>Version</th><th>Dernière activité</th><th>Première fois</th></tr></thead><tbody>
+          ${d.rows.slice(0, 300).map((r) => `<tr><td>${r.online ? '<span style="color:var(--ok)">● en ligne</span>' : '<span class="muted">○</span>'}</td><td>${esc(r.u || '(non connecté)')}</td><td><code>${esc(r.id)}</code></td><td>${esc(r.p)}</td><td>${esc(r.v)}</td><td>${EE.fmtDate(r.t)}</td><td>${EE.fmtDate(r.f)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">Aucun signal reçu pour le moment.</td></tr>'}</tbody></table></div>
+          <p class="small muted">Pour bloquer un appareil ou un compte, copiez son identifiant dans l'onglet « Contrôle à distance ».</p>`;
+      } catch (er) { box.innerHTML = `<p class="err">${esc(er.message)}</p>`; if (!S.signedIn()) { clearInterval(statsTimer); statsTab(el); } }
+    };
+    $('#st-ref').onclick = show;
+    $('#st-out').onclick = () => { S.signOut(); statsData = null; statsTab(el); };
+    $('#st-csv').onclick = () => {
+      if (!statsData) return; const q = (v) => '"' + String(v).replace(/"/g, '""') + '"', iso = (t) => new Date(t).toISOString();
+      const csv = ['etat;utilisateur;appareil;plateforme;version;derniere_activite;premiere_fois'].concat(statsData.rows.map((r) => [r.online ? 'en ligne' : 'hors ligne', r.u, r.id, r.p, r.v, iso(r.t), iso(r.f)].map(q).join(';'))).join('\r\n');
+      EE.Export.download('yak-elec-pro_connexions.csv', new Blob(['﻿' + csv], { type: 'text/csv' }));
+    };
+    show(); statsTimer = setInterval(show, 30000);
   }
 
   // ---------- 5. Sauvegarde / mise à jour ----------

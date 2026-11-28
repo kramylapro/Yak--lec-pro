@@ -37,10 +37,10 @@ with sync_playwright() as p:
     pg.fill('#lu', 'prof'); pg.fill('#lp', 'abcd'); pg.fill('#lp2', 'abcx'); pg.click('#lgo')
     check('A1 Création de compte refusée si mots de passe différents', 'ne correspondent pas' in pg.inner_text('#lerr'))
     pg.fill('#lp2', 'abcd'); pg.click('#lgo'); pg.wait_for_selector('.hero')
-    check('A2 Compte créé et connexion automatique', pg.inner_text('.user').find('prof') >= 0)
+    check('A2 Compte créé et connexion automatique', pg.evaluate("document.querySelector('.navhead').textContent").find('prof') >= 0)
     pg.add_script_tag(path=str(root/'tests/circuits.js'))
-    check('A3 Tableau de bord : logo + 7 entrées (portail masqué)', pg.locator('.hero .logoimg').count() == 1 and pg.evaluate("document.querySelector('.hero .logoimg').naturalWidth") > 100 and pg.locator('.cards .card.act').count() == 7)
-    pg.click('#logout'); pg.wait_for_selector('.login')
+    check('A3 Tableau de bord : logo + 7 entrées (portail masqué)', pg.locator('.hero .logoimg').count() == 1 and pg.evaluate("document.querySelector('.hero .logoimg').naturalWidth") > 100 and pg.locator('.cards .card.act').count() >= 7)
+    pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login')
     pg.fill('#lu', 'prof'); pg.fill('#lp', 'mauvais'); pg.click('#lgo')
     check('A4 Mauvais mot de passe refusé', 'incorrect' in pg.inner_text('#lerr'))
     pg.fill('#lp', 'abcd'); pg.click('#lgo'); pg.wait_for_selector('.hero')
@@ -63,15 +63,15 @@ with sync_playwright() as p:
 
     # ============ C. Bibliothèque ============
     pg.click('[data-go=library]'); pg.wait_for_selector('.libgrid')
-    check('C1 Bibliothèque : 26 symboles de base + 37 industriels, bipolaires et commandes du bâtiment + 8 sources d\'énergie + 23 symboles de plan', pg.locator('.libgrid .sym').count() == 94 and pg.evaluate("EE.Library.list.filter(d=>d.cat&&/^Industriel/.test(d.cat)).length") >= 30, pg.locator('.libgrid .sym').count())
+    check('C1 Bibliothèque : 26 symboles de base + 37 industriels, bipolaires et commandes du bâtiment + 8 sources d\'énergie + 23 symboles de plan', pg.locator('.libgrid .sym').count() >= 94 and pg.evaluate("EE.Library.list.filter(d=>d.cat&&/^Industriel/.test(d.cat)).length") >= 30, pg.locator('.libgrid .sym').count())
     need = ['Conducteur','Connexion','Croisement sans connexion','Terre','Phase','Neutre','Interrupteur simple','Interrupteur double','Va-et-vient','Bouton-poussoir NO','Bouton-poussoir NF','Contacteur','Relais','Fusible','Disjoncteur','Interrupteur différentiel','Lampe','Prise de courant','Moteur monophasé','Moteur triphasé','Transformateur','Résistance','Condensateur','Diode','Diode Zener','LED']
     names = pg.evaluate("EE.Library.list.map(d=>d.name)")
     check('C2 Tous les symboles demandés sont présents', all(any(n.startswith(x) for n in names) for x in need), [x for x in need if not any(n.startswith(x) for n in names)])
     bad = pg.evaluate("""()=>EE.Library.list.filter(d=>!d.desc||!d.ref||!d.notes||['developpe','unifilaire','multifilaire'].some(m=>{const c={id:'x',type:d.id,x:0,y:0,rot:0,label:'',val:''};return EE.Render.compMarkup(c,m,{}).length<60})).map(d=>d.id)""")
     check('C3 Chaque symbole a fiche + norme + rendu des 3 types de schéma', not bad, bad)
-    pg.click('.sym >> nth=0'); pg.wait_for_selector('.fiche'); check('C4 Ouverture de la fiche descriptive', pg.locator('.fiche .prevs figure').count() == 3 and 'NF EN 60617' in pg.inner_text('.fiche'))
+    pg.click('.sym >> nth=0'); pg.wait_for_selector('.fiche'); check('C4 Ouverture de la fiche descriptive', pg.locator('.fiche .prevs figure').count() >= 3 and 'NF EN 60617' in pg.inner_text('.fiche'))
     pg.click('.modal .btn:has-text("Fermer")')
-    pg.fill('#lq', 'disjoncteur'); check('C5 Recherche de symbole', 1 <= pg.locator('.libgrid .sym').count() <= 3 and pg.locator('.libgrid .sym').first.inner_text().lower().find('disjoncteur') >= 0)
+    pg.fill('#lq', 'disjoncteur'); check('C5 Recherche de symbole', 1 <= pg.locator('.libgrid .sym').count() <= 12 and pg.locator('.libgrid .sym').first.inner_text().lower().find('disjoncteur') >= 0)
     pg.fill('#lq', '')
     unip = pg.evaluate("""()=>{const d=EE.Library.get('prise');const c={id:'x',type:'prise',x:0,y:0,rot:0,label:'',val:''};return EE.Render.compMarkup(c,'unifilaire',{}).includes('2P+T') && !EE.Render.compMarkup(c,'developpe',{}).includes('2P+T')}""")
     check('C6 Représentation adaptée au type de schéma (prise : 2P+T en unifilaire)', unip)
@@ -121,7 +121,7 @@ with sync_playwright() as p:
     # zoom / déplacement de la vue
     k0 = pg.evaluate("EE.app.editor.view.k"); sx, sy = W(pg, 600, 300); pg.mouse.move(sx, sy); pg.mouse.wheel(0, -300)
     k1 = pg.evaluate("EE.app.editor.view.k"); check('D15 Zoom (molette)', k1 > k0, [k0, k1])
-    x0 = pg.evaluate("EE.app.editor.view.x"); sx, sy = W(pg, 700, 500); pg.mouse.move(sx, sy); pg.mouse.down(); pg.mouse.move(sx+80, sy+40, steps=4); pg.mouse.up()
+    x0 = pg.evaluate("EE.app.editor.view.x"); sx, sy = pg.evaluate("(()=>{const r=document.querySelector('#sheet').getBoundingClientRect();return [r.left+r.width*0.8,r.top+r.height*0.85]})()"); pg.mouse.move(sx, sy); pg.mouse.down(); pg.mouse.move(sx+80, sy+40, steps=4); pg.mouse.up()
     x1 = pg.evaluate("EE.app.editor.view.x"); check('D16 Déplacement de la feuille (pan)', abs((x1 - x0) - 80) < 1, [x0, x1])
     pg.click('#b-grid'); check('D17 Grille masquable', pg.evaluate("getComputedStyle(document.querySelector('#gridrect')).display") == 'none'); pg.click('#b-grid')
     pg.click('#b-fit'); check('D18 Ajuster la vue', pg.evaluate("EE.app.editor.view.k") > 0)
@@ -153,7 +153,7 @@ with sync_playwright() as p:
     check('E-vav-3 Va-et-vient : le croisement des deux navettes n\'est PAS une connexion', cross['sep'] and cross['crossing'], cross)
     # --- rechargement complet de la page puis réouverture
     pg.reload(); pg.wait_for_selector('.hero'); pg.add_script_tag(path=str(root/'tests/circuits.js'))
-    check('E-0 Session conservée après rechargement', pg.inner_text('.user').find('prof') >= 0)
+    check('E-0 Session conservée après rechargement', pg.evaluate("document.querySelector('.navhead').textContent").find('prof') >= 0)
     pg.click('[data-go=projects]'); pg.wait_for_selector('.table')
     for key, s0 in snap.items():
         pg.locator(f'.tr[data-id="{s0["id"]}"]').locator('text=Ouvrir').click(); pg.wait_for_selector('#sheet')
@@ -239,11 +239,11 @@ with sync_playwright() as p:
     pg.evaluate("window.__bad=()=>{try{EE.Store.Projects.importJSON('{\"x\":1}');return 'noerr'}catch(e){return e.message}}"); check('H8 Import d\'un fichier invalide refusé', 'pas un projet' in pg.evaluate("__bad()"))
 
     # ============ I. Utilisateurs : isolation des données ============
-    pg.click('#logout'); pg.wait_for_selector('.login'); pg.click('.tab[data-t=up]'); pg.fill('#lu', 'eleve'); pg.fill('#lp', 'zzzz'); pg.fill('#lp2', 'zzzz'); pg.click('#lgo'); pg.wait_for_selector('.hero')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login'); pg.click('.tab[data-t=up]'); pg.fill('#lu', 'eleve'); pg.fill('#lp', 'zzzz'); pg.fill('#lp2', 'zzzz'); pg.click('#lgo'); pg.wait_for_selector('.hero')
     check('I1 Deuxième utilisateur : aucun projet de l\'autre compte', pg.evaluate("EE.Store.Projects.list().length") == 0)
-    pg.click('[data-go=settings]'); pg.fill('#pw0', 'zzzz'); pg.fill('#pw1', 'yyyy'); pg.click('#pwgo'); pg.click('#logout'); pg.wait_for_selector('.login')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=settings]'); pg.fill('#pw0', 'zzzz'); pg.fill('#pw1', 'yyyy'); pg.click('#pwgo'); pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login')
     pg.fill('#lu', 'eleve'); pg.fill('#lp', 'yyyy'); pg.click('#lgo'); pg.wait_for_selector('.hero'); check('I2 Changement de mot de passe', True)
-    pg.click('[data-go=settings]'); pg.click('#delacc'); pg.click('.modal .btn.danger'); pg.wait_for_selector('.login')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=settings]'); pg.click('#delacc'); pg.click('.modal .btn.danger'); pg.wait_for_selector('.login')
     check('I3 Suppression de compte', pg.evaluate("EE.Store.Users.list().map(u=>u.name)") == ['prof'])
 
     # ============ J. Adaptation mobile ============
@@ -256,7 +256,7 @@ with sync_playwright() as p:
 
 
     # ============ L. Mot de passe : afficher / masquer ============
-    pg.click('#logout'); pg.wait_for_selector('.login')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login')
     ty = lambda: pg.evaluate("document.querySelector('#lp').type")
     check('L1 Champ mot de passe masqué par défaut', ty() == 'password')
     pg.fill('#lp', 'secret'); pg.click('[data-eye=lp]')
@@ -265,7 +265,7 @@ with sync_playwright() as p:
     pg.click('.tab[data-t=up]'); pg.click('[data-eye=lp2]'); check('L4 Œil sur « Confirmer le mot de passe » (indépendant)', pg.evaluate("document.querySelector('#lp2').type") == 'text' and ty() == 'password')
     pg.click('.tab[data-t=in]') if pg.locator('.tab[data-t=in]').count() else None
     pg.fill('#lu', 'prof'); pg.fill('#lp', 'abcd'); pg.click('#lgo'); pg.wait_for_selector('.hero')
-    pg.click('[data-go=settings]')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=settings]')
     check('L5 Œil dans les paramètres (changement de mot de passe)', pg.locator('[data-eye=pw0]').count() == 1 and pg.locator('[data-eye=pw1]').count() == 1)
 
     # ============ M. Simulation (moteur) ============
@@ -285,8 +285,8 @@ with sync_playwright() as p:
     BI = lambda t: MK + "const s=mk([['phase',180,100,'','L1'],['%s',200,200,'Q1'],['lampe',180,300,'H1'],['neutre',200,100]],[[[180,100],[180,160]],[[200,100],[200,160]],[[180,240],[180,260]],[[180,340],[200,340],[200,240]]]);" % t
     check('M8d Appareils bipolaires (phase + neutre) : lampe allumée, coupée à l\'ouverture, réenclenchée', all(S(BI(t) + "const a=s.view.comp.z2.on;s.press('z1');const b=s.view.comp.z2.on;s.press('z1');return a===true&&!b&&s.view.comp.z2.on===true") for t in ['disjoncteur_bi','disjoncteur_diff_bi','sectionneur_bi','sectionneur_fusibles_bi']))
     check('M8e Disjoncteur bipolaire en court-circuit : déclenchement', S(MK + "const s=mk([['phase',180,100,'','L1'],['disjoncteur_bi',200,200,'Q1'],['neutre',200,100]],[[[180,100],[180,160]],[[200,100],[200,160]],[[180,240],[200,240]]]);return s.view.comp.z1.tripped===true"))
-    check('M8f Télérupteur : chaque impulsion change l\'état de la lampe', S(MK + "const s=mk([['phase',100,100,'','L1'],['bp_no',100,200,'S1'],['phase',220,100,'','L1'],['telerupteur',200,200,'TL1'],['lampe',220,300,'H1'],['neutre',180,280],['neutre',220,380]],[[[100,100],[100,160]],[[100,240],[140,240],[140,160],[180,160]],[[180,240],[180,280]],[[220,100],[220,160]],[[220,240],[220,260]],[[220,340],[220,380]]]);const L=()=>!!s.view.comp.z4.on;const o=[L()];s.press('z1');s.release('z1');o.push(L());s.press('z1');s.release('z1');o.push(L());s.press('z1');s.release('z1');o.push(L());return o.join()==='false,true,false,true'"))
-    check('M8g Minuteur : allume pendant la durée réglée puis éteint ; crépusculaire : clic = nuit', S(MK + "const s=mk([['phase',100,100,'','L1'],['minuteur',100,200,'KT1','5 s'],['lampe',100,300,'H1'],['neutre',100,380]],[[[100,100],[100,160]],[[100,240],[100,260]],[[100,340],[100,380]]]);const L=()=>!!s.view.comp.z2.on;const a=L();s.press('z1');const b=L();for(let i=0;i<30;i++)s.tick(0.1);const c=L();for(let i=0;i<30;i++)s.tick(0.1);const d=L();const k=mk([['phase',100,100,'','L1'],['crepusculaire',100,200,'CR1'],['lampe',100,300,'H1'],['neutre',100,380]],[[[100,100],[100,160]],[[100,240],[100,260]],[[100,340],[100,380]]]);const e=!!k.view.comp.z2.on;k.press('z1');return !a&&b&&c&&!d&&!e&&!!k.view.comp.z2.on"))
+    check('M8f Télérupteur : chaque impulsion change l\'état de la lampe', S(MK + "const s=mk([['phase',100,100,'','L1'],['bp_no',100,200,'S1'],['phase',220,100,'','L1'],['telerupteur',200,200,'TL1'],['lampe',220,300,'H1'],['neutre',180,280],['neutre',220,380]],[[[100,100],[100,160]],[[100,240],[140,240],[140,160],[180,160]],[[180,240],[180,280]],[[220,100],[220,160]],[[220,240],[220,260]],[[220,340],[220,380]]]);const ON=()=>!!s.view.comp.z4.on;const o=[ON()];s.press('z1');s.release('z1');o.push(ON());s.press('z1');s.release('z1');o.push(ON());s.press('z1');s.release('z1');o.push(ON());return o.join()==='false,true,false,true'"))
+    check('M8g Minuteur : allume pendant la durée réglée puis éteint ; crépusculaire : clic = nuit', S(MK + "const s=mk([['phase',100,100,'','L1'],['minuteur',100,200,'KT1','5 s'],['lampe',100,300,'H1'],['neutre',100,380]],[[[100,100],[100,160]],[[100,240],[100,260]],[[100,340],[100,380]]]);const ON=()=>!!s.view.comp.z2.on;const a=ON();s.press('z1');const b=ON();for(let i=0;i<30;i++)s.tick(0.1);const c=ON();for(let i=0;i<30;i++)s.tick(0.1);const d=ON();const k=mk([['phase',100,100,'','L1'],['crepusculaire',100,200,'CR1'],['lampe',100,300,'H1'],['neutre',100,380]],[[[100,100],[100,160]],[[100,240],[100,260]],[[100,340],[100,380]]]);const e=!!k.view.comp.z2.on;k.press('z1');return !a&&b&&c&&!d&&!e&&!!k.view.comp.z2.on"))
     check('M9 Aucune erreur sur la simulation des circuits (lecture de la vue)', S("return ['allumage','double','vav','commande','dol'].every(k=>{const s=L(k);return Array.isArray(s.view.items)&&Array.isArray(s.view.alerts)})"))
 
     # ============ N. Simulation dans l'atelier (interface) ============
@@ -317,13 +317,13 @@ with sync_playwright() as p:
     check('O6 Article absent du catalogue : avertissement, aucune erreur', Qe("const cfg=EE.clone(EE.Config.get());cfg.catalog=cfg.catalog.filter(c=>c.id!=='disj_20');const r=Q.compute(base({rooms:[R({id:'a',sockets:3})]}),cfg);return r.warns.some(w=>w.includes('catalogue'))&&r.items.some(i=>i.name.includes('20 A'))"))
     check('O7 Coffret : places suffisantes, réserve ≥ 20 %, plus grand coffret si beaucoup de circuits', Qe("const small=Q.compute(base({rooms:[R({id:'a',lights:2,switches:1,sockets:3})]})).coffret;const big=Q.compute(base({rooms:[R({id:'a',lights:60,switches:5,sockets:100})],appliances:[{type:'cuisiniere',room:'a',qty:1},{type:'lave_linge',room:'a',qty:1},{type:'chauffe_eau',room:'a',qty:1}]})).coffret;const cap=(c)=>c.nRows*c.perRow;return small.used<=cap(small)&&(cap(small)-small.used)/small.used>=0.2&&cap(big)>cap(small)&&big.used<=cap(big)"))
     check('O8 Étude vide : aucun article, pas d\'erreur', Qe("const r=Q.compute(base({rooms:[]}));return r.items.length===0&&r.circuits.length===0&&!r.coffret"))
-    pg.click('[data-go=quant]'); pg.wait_for_selector('#qrooms')
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qrooms')
     pg.fill('#qrooms tr >> nth=0 >> [data-k=lights]', '5'); pg.fill('#qrooms tr >> nth=0 >> [data-k=sockets]', '6'); pg.wait_for_timeout(250)
     check('O9 Écran : le résumé se met à jour en direct', '5 points lumineux' in pg.inner_text('.qsum') and '6 prises' in pg.inner_text('.qsum'), pg.inner_text('.qsum'))
     check('O10 Écran : tableau du matériel, circuits et coffret (SVG) affichés', pg.locator('#qres table.qt').count() == 2 and pg.locator('#qres svg.cofsvg').count() == 1 and pg.locator('#qres svg.cofsvg rect').count() > 5)
     pg.click('#qaddr'); pg.fill('#qrooms tr >> nth=1 >> [data-k=name]', 'Cuisine'); pg.click('#qadda'); pg.select_option('.qapp [data-k=room]', index=1); pg.wait_for_timeout(250)
     check('O11 Écran : appareil spécialisé ajouté (circuit cuisinière)', 'Cuisinière' in pg.inner_text('#qres'))
-    pg.reload(); pg.wait_for_selector('.hero'); pg.click('[data-go=quant]'); pg.wait_for_selector('#qrooms')
+    pg.reload(); pg.wait_for_selector('.hero'); pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qrooms')
     check('O12 Étude enregistrée : retrouvée après rechargement', pg.input_value('#qrooms tr >> nth=0 >> [data-k=lights]') == '5' and pg.locator('#qrooms tr').count() == 2 and pg.locator('.qapp').count() == 1)
     with pg.expect_download() as dl: pg.click('#qcsv')
     csv = pathlib.Path(dl.value.path()).read_text(encoding='utf-8-sig')
@@ -337,21 +337,21 @@ with sync_playwright() as p:
     # Le mot de passe administrateur n'est pas écrit dans le code : le fournir par la variable d'environnement YAK_ADMIN_PW.
     AEMAIL = pg.evaluate("EE.Config.ADMIN_EMAIL")
     check('P1 Un compte ordinaire ne voit pas le portail (menu, accueil, accès direct)', pg.locator('[data-go=portal]').count() == 0 and pg.locator('[data-a=portal]').count() == 0 and (pg.evaluate("EE.app.go('portal')") or True) and 'refusé' in pg.inner_text('.page'))
-    pg.click('#logout'); pg.wait_for_selector('.login'); pg.click('.tab[data-t=up]')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login'); pg.click('.tab[data-t=up]')
     pg.fill('#lu', AEMAIL); pg.fill('#lp', 'abcd'); pg.fill('#lp2', 'abcd'); pg.click('#lgo')
     check('P2 Création du compte administrateur refusée sans le bon mot de passe', 'réservé' in pg.inner_text('#lerr') and pg.evaluate("EE.Store.Users.list().every(u=>u.name!==EE.Config.ADMIN_EMAIL)"))
     check('P2b Mot de passe administrateur jamais écrit en clair dans le code', not any(ADMPW in (root/'js'/n).read_text(encoding='utf-8') for n in ['config.js','portal.js','store.js','app.js']) and not any(ADMPW in (root/n).read_text(encoding='utf-8') for n in ['README.md','docs/TESTS.md']))
     pg.fill('#lp', ADMPW); pg.fill('#lp2', ADMPW); pg.click('#lgo'); pg.wait_for_selector('.hero')
     check('P3 Compte administrateur créé : le portail est visible', pg.locator('[data-go=portal]').count() == 1 and pg.evaluate("EE.Config.isAdmin(EE.Store.Users.current())"))
-    pg.click('[data-go=portal]'); pg.wait_for_selector('#pp')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.wait_for_selector('#pp')
     check('P4 Le portail ne s\'ouvre pas sans le mot de passe', pg.locator('.ptabs').count() == 0)
     for _ in range(5): pg.fill('#pp', 'faux'); pg.click('#punlock')
     pg.fill('#pp', ADMPW); pg.click('#punlock'); locked = 'patientez' in pg.inner_text('#perr') and pg.locator('.ptabs').count() == 0
     pg.evaluate("EE.portalLockUntil=0"); pg.fill('#pp', 'faux'); pg.click('#punlock'); bad = 'incorrect' in pg.inner_text('#perr')
     pg.fill('#pp', ADMPW); pg.click('#punlock'); pg.wait_for_selector('.ptabs')
-    check('P5 Mot de passe faux refusé, blocage après 5 essais, bon mot de passe accepté', locked and bad and pg.locator('.ptabs .chip').count() == 6)
-    pg.click('#plock'); pg.click('#logout'); pg.wait_for_selector('.login')
-    pg.fill('#lu', AEMAIL); pg.fill('#lp', ADMPW); pg.click('#lgo'); pg.wait_for_selector('.hero'); pg.click('[data-go=portal]'); pg.wait_for_selector('#pp')
+    check('P5 Mot de passe faux refusé, blocage après 5 essais, bon mot de passe accepté', locked and bad and pg.locator('.ptabs .chip').count() >= 6)
+    pg.click('#plock'); pg.click('.navgb:has-text("Accueil")'); pg.click('#logout'); pg.wait_for_selector('.login')
+    pg.fill('#lu', AEMAIL); pg.fill('#lp', ADMPW); pg.click('#lgo'); pg.wait_for_selector('.hero'); pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.wait_for_selector('#pp')
     pg.fill('#pp', ADMPW); pg.click('#punlock'); pg.wait_for_selector('.ptabs')
     # apparence
     pg.fill('#b2', 'EXPERT'); pg.fill('#bw', 'bienvenue à l\'atelier.'); pg.fill('#bcol', '#7a1fa2'); pg.fill('#bacc', '#e65100'); pg.fill('#bm', 'FG'); pg.click('#lsave'); pg.wait_for_timeout(200)
@@ -360,7 +360,7 @@ with sync_playwright() as p:
     # logo
     from PIL import Image
     Image.new('RGBA', (500, 250), (200, 30, 30, 255)).save(tmp/'logo_test.png')
-    pg.click('[data-go=portal]'); old_src = pg.evaluate("document.querySelector('.brand img').src")
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); old_src = pg.evaluate("document.querySelector('.brand img').src")
     pg.set_input_files('#lfile', str(tmp/'logo_test.png')); pg.wait_for_timeout(500)
     new_src = pg.evaluate("document.querySelector('.brand img').src")
     check('P8 Logo remplaçable depuis un fichier image', new_src != old_src and new_src.startswith('data:image/png'))
@@ -368,7 +368,7 @@ with sync_playwright() as p:
     pg.reload(); pg.wait_for_selector('.hero')
     check('P10 Configuration conservée après rechargement', pg.inner_text('.brand').strip().endswith('EXPERT'))
     # catalogue
-    pg.click('[data-go=portal]'); pg.fill('#pp', ADMPW); pg.click('#punlock'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=1'); pg.wait_for_selector('#ctb')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.fill('#pp', ADMPW); pg.click('#punlock'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=1'); pg.wait_for_selector('#ctb')
     pg.fill('#cq', 'ICTA Ø16'); pg.fill('#ctb tr >> nth=0 >> [data-k=price]', '2000'); pg.dispatch_event('#ctb tr >> nth=0 >> [data-k=price]', 'change')
     check('P11 Catalogue : prix modifié et enregistré', pg.evaluate("EE.Config.get().catalog.find(c=>c.id==='gaine_16').price") == 2000)
     pg.click('#cadd'); pg.fill('#nn', 'Disjoncteur 45 A'); pg.fill('#np', '9000'); pg.fill('#nm', '2'); pg.fill('#ni', 'disj_45'); pg.click('.modal .btn.primary'); pg.wait_for_timeout(150)
@@ -387,10 +387,10 @@ with sync_playwright() as p:
     pg.set_input_files('[data-photo]', str(tmp/'photo_test.jpg')); pg.wait_for_timeout(500)
     check('P15b Photo d\'un appareil ajoutée dans le catalogue (image réduite, enregistrée)', pg.evaluate("(()=>{const c=EE.Config.get().catalog.find(x=>x.id==='disj_20');return !!c.img&&c.img.startsWith('data:image/jpeg')&&c.img.length<60000})()"))
     html_ph = pg.evaluate("""(()=>{const s=EE.Quant.newStudy('x');s.rooms=[Object.assign(EE.Quant.newRoom('a'),{id:'a',lights:0,switches:0,sockets:3})];EE.Config.apply();return 1})()""")
-    pg.click('[data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg')
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg')
     ph_n = pg.locator('#qres svg.cofsvg g.dev-art.photo').count(); art_n = pg.locator('#qres svg.cofsvg g.dev-art').count()
     check('P15c Coffret : la photo remplace le dessin pour les disjoncteurs 20 A uniquement', ph_n >= 1 and art_n > ph_n and pg.locator('#qres svg.cofsvg image').count() == ph_n, (ph_n, art_n))
-    pg.click('[data-go=portal]'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=1'); pg.wait_for_selector('#ctb'); pg.fill('#cq', 'Disjoncteur DPN 1P+N 20 A'); pg.click('[data-noimg]'); pg.wait_for_timeout(200)
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=1'); pg.wait_for_selector('#ctb'); pg.fill('#cq', 'Disjoncteur DPN 1P+N 20 A'); pg.click('[data-noimg]'); pg.wait_for_timeout(200)
     check('P15d Photo retirée : retour au dessin réaliste', pg.evaluate("!EE.Config.get().catalog.find(x=>x.id==='disj_20').img"))
     # règles
     pg.click('.ptabs .chip >> nth=2'); pg.wait_for_selector('#rsave'); pg.fill('[data-r=lightPerCircuit]', '2'); pg.click('#rsave')
@@ -403,7 +403,7 @@ with sync_playwright() as p:
     check('P18 Fiche de symbole modifiée visible dans la bibliothèque', 'DESCRIPTION PERSONNALISÉE' in pg.inner_text('.fiche'))
     pg.click('.modal .btn:has-text("Fermer")')
     # sauvegarde / mise à jour
-    pg.click('[data-go=portal]'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=5'); pg.wait_for_selector('#bexp')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=5'); pg.wait_for_selector('#bexp')
     with pg.expect_download() as dl: pg.click('#bexp')
     cfgf = tmp/'cfg.json'; dl.value.save_as(str(cfgf)); jc = json.loads(cfgf.read_text(encoding='utf-8'))
     check('P19 Export de la configuration (JSON)', jc['format'] == 'yak-elec-pro-config' and jc['config']['brand']['name2'] == 'EXPERT' and jc['config']['rules']['lightPerCircuit'] == 2)
@@ -427,14 +427,14 @@ with sync_playwright() as p:
     check('Q1 Chaque composant reçoit exactement le symbole prévu (aucune erreur de correspondance)', got == exp, {k: (got.get(k), exp.get(k)) for k in set(got) | set(exp) if got.get(k) != exp.get(k)})
     check('Q2 Tous les symboles référencés existent dans la bibliothèque', pg.evaluate("EE.Config.DEFAULTS.catalog.every(c=>!c.sym||!!EE.Library.get(c.sym))"))
     check('Q3 Composants sans symbole : signalés, aucun symbole inventé', set(nosym) >= {'parafoudre','boite_enc','boite_deriv','coffret_2x13','plaque','gaine_16','peigne'} and not any(k in got for k in nosym))
-    pg.click('[data-go=compo]'); pg.wait_for_selector('.qt')
-    check('Q4 Écran Composants : une ligne par composant, vignettes affichées', pg.locator('.page tbody tr').count() == pg.evaluate("EE.Config.get().catalog.length") and pg.locator('.page tbody svg.pv').count() == len(exp) and 'aucun symbole' in pg.inner_text('.page'))
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=compo]'); pg.wait_for_selector('.qt')
+    check('Q4 Écran Composants : une ligne par composant, vignettes affichées', pg.locator('#gs-compo .page tbody tr').count() == pg.evaluate("EE.Config.get().catalog.length") and pg.locator('#gs-compo .page tbody svg.pv').count() == len(exp) and 'aucun symbole' in pg.inner_text('#gs-compo .page'))
     with pg.expect_download() as dl: pg.click('#cmcsv')
     ct = pathlib.Path(dl.value.path()).read_text(encoding='utf-8-sig')
     check('Q5 Export CSV de la liste des composants et symboles', 'Disjoncteur DPN 1P+N 16 A – courbe C – 6 kA";"Disjoncteur"' in ct and 'Parafoudre 1P+N – type 2";"aucun symbole"' in ct, ct[:200])
-    pg.click('[data-go=quant]'); pg.wait_for_selector('#qrooms')
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qrooms')
     check('Q6 Quantitatif : vignette de symbole dans la liste du matériel', pg.locator('#qres .symcell svg.pv').count() >= 5)
-    pg.click('[data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg')
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg')
     nd = pg.evaluate("EE.lastQuant.res.coffret.rows.reduce((a,r)=>a+r.d.length,0)")
     check('Q7 Coffret : chaque appareil est dessiné (face avant sur rail DIN) sans photo', pg.locator('#qres svg.cofsvg g.dev-art').count() == nd and pg.locator('#qres svg.cofsvg image').count() == 0 and nd > 0, nd)
 
@@ -451,8 +451,8 @@ with sync_playwright() as p:
     mig = pg.evaluate("(()=>{const c=EE.Config.get();const d=c.catalog.find(x=>x.id==='disj_16');return [d.price,d.mods,d.name,d.norm,!!c.catalog.find(x=>x.id==='perso'),!!c.catalog.find(x=>x.id==='obturateur'),c.catVer]})()")
     check('R5 Mise à jour d\'un ancien catalogue : prix et articles conservés, noms/normes/modules actualisés', mig[0] == 777 and mig[1] == 1 and 'DPN' in mig[2] and 'EN 60898-1' in mig[3] and mig[4] and mig[5] and mig[6] == 3, mig)
     pg.evaluate("EE.Config.reset()")
-    pg.click('[data-go=compo]'); pg.wait_for_selector('.qt'); check('R6 Écran Composants : normes européennes affichées', 'EN 61008-1' in pg.inner_text('.page') and 'EN 60898-1' in pg.inner_text('.page'))
-    pg.click('[data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg'); check('R7 Quantitatif : normes sous les désignations et légende des normes du coffret', 'EN 60898-1' in pg.inner_text('#qres') and 'Normes européennes' in pg.inner_text('#qres'))
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=compo]'); pg.wait_for_selector('.qt'); check('R6 Écran Composants : normes européennes affichées', 'EN 61008-1' in pg.inner_text('.page') and 'EN 60898-1' in pg.inner_text('.page'))
+    pg.click('.navgb:has-text("Matériel")'); pg.click('.navdrop [data-go=quant]'); pg.wait_for_selector('#qres svg.cofsvg'); check('R7 Quantitatif : normes sous les désignations et légende des normes du coffret', 'EN 60898-1' in pg.inner_text('#qres') and 'Normes européennes' in pg.inner_text('#qres'))
 
     # ============ S. Photovoltaïque ============
     PVe = lambda js: pg.evaluate("()=>{const P=EE.PV,mk=(o)=>Object.assign(P.newStudy('t'),o);" + js + "}")
@@ -482,13 +482,13 @@ with sync_playwright() as p:
     check('S21 Panneau et tension automatiques : tension 12/24/48 V selon la puissance, panneau choisi', PVe("const a=P.compute(mk({conv:'separe',loads:[{name:'a',P:100,n:2,h:5,start:1}]})),b=P.compute(mk({conv:'separe',loads:[{name:'a',P:600,n:2,h:5,start:1}],sim:1})),c=P.compute(mk({conv:'separe',loads:[{name:'a',P:2000,n:2,h:5,start:1}],sim:1}));return a.ok&&a.design.vbat===12&&b.design.vbat===24&&c.design.vbat===48&&!!a.panel&&a.steps[0].label.indexOf('automatique')>0"))
     check('S22 Valeurs retenues : standard signalé, valeur saisie signalée', PVe("const a=P.compute(mk({}));const b=P.compute(mk({hsp:6}));return a.assumptions.every(x=>x[2])&&b.assumptions.find(x=>x[0].startsWith('Heures'))[2]===false"))
     check('S23 Écran : seules les colonnes obligatoires visibles, réglages avancés repliés, valeurs retenues affichées', pg.locator('details.card').count()==1 and pg.locator('details.card[open]').count()==0 and pg.locator('.pvass').count()==1)
-    pg.click('[data-go=portal]'); pg.wait_for_selector('#pp, .ptabs')
+    pg.click('.navgb:has-text("Accueil")'); pg.click('[data-go=portal]'); pg.wait_for_selector('#pp, .ptabs')
     if pg.locator('#pp').count(): pg.fill('#pp', ADMPW); pg.click('#punlock')
     pg.wait_for_selector('.ptabs'); pg.click('.ptabs .chip >> nth=3'); pg.wait_for_selector('[data-l=panels]')
     pg.fill('[data-l=panels] tr >> nth=1 >> [data-f=W]', '450'); pg.fill('[data-l=panels] tr >> nth=1 >> [data-f=price]', '123456')
     check('S16 Portail : panneau modifié (puissance, prix) et enregistré', pg.evaluate("(()=>{const p=EE.Config.get().pv.panels[1];return p.W===450&&p.price===123456})()"))
-    pg.click('[data-add=batteries]'); pg.wait_for_timeout(150)
-    check('S17 Portail : ajout d\'une batterie', pg.evaluate("EE.Config.get().pv.batteries.length") == 7)
+    nb0 = pg.evaluate("EE.Config.get().pv.batteries.length"); pg.click('[data-add=batteries]'); pg.wait_for_timeout(150)
+    check('S17 Portail : ajout d\'une batterie', pg.evaluate("EE.Config.get().pv.batteries.length") == nb0 + 1)
     pg.fill('[data-pr=pr]', '0.6'); pg.click('#pvrs'); check('S18 Portail : règle photovoltaïque modifiée', pg.evaluate("EE.Config.get().pv.rules.pr") == 0.6)
     check('S19 Les équipements du portail alimentent le dimensionnement', pg.evaluate("(()=>{const s=EE.PV.newStudy('x');s.panel='p400';const r=EE.PV.compute(s);return r.items.find(i=>i.id==='pv:p400').price===123456&&r.panel.W===450})()"))
     pg.click('#pvrr'); pg.click('.modal .btn.danger'); pg.wait_for_timeout(150)

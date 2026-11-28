@@ -85,7 +85,14 @@ func main() {
 		openWindow(url)
 		return
 	}
-	html := strings.Replace(string(page), "</body>", beat+"</body>", 1)
+	// insertion avant la DERNIÈRE balise </body> (la vraie fin de page) : une balise </body>
+	// écrite dans le code JavaScript (impression, rapports) ne doit jamais être modifiée.
+	html := string(page)
+	if i := strings.LastIndex(html, "</body>"); i >= 0 {
+		html = html[:i] + beat + html[i:]
+	} else {
+		html += beat
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/__alive", func(w http.ResponseWriter, r *http.Request) {
 		atomic.StoreInt64(&lastPing, time.Now().UnixNano())

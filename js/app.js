@@ -54,18 +54,62 @@
     document.documentElement.dataset.theme = u ? St.Settings.get().theme : 'light';
     if (!u) return renderLogin();
     $('#app').innerHTML = `<header class="top"><div class="brandcol"><a class="brand" data-go="home"><img class="logoimg ico" src="${EE.LOGO_ICON}" alt="Yak-élec" width="38" height="38"><span>${esc(Cf().brand.name1)}<b>${esc(Cf().brand.name2)}</b></span></a><button class="ctab${app.screen === 'contact' ? ' on' : ''}" data-go="contact" title="Me contacter">✉ Contact</button></div>
-      <nav>${[['home', 'Accueil'], ['projects', 'Mes projets'], ['library', 'Bibliothèque'], ['editor', 'Atelier'], ['bat', 'Bâtiment'], ['quant', 'Quantitatif'], ['compo', 'Composants'], ['pv', 'Photovoltaïque']].concat(showPortal(u) ? [['portal', 'Portail']] : []).concat([['settings', 'Paramètres']]).map(([k, l]) => `<button class="nav${app.screen === k ? ' on' : ''}" data-go="${k}">${l}</button>`).join('')}</nav>
-      <div class="user"><span title="Utilisateur connecté">👤 ${esc(u.name)}</span><button class="btn small" id="logout">Déconnexion</button></div></header>
+      <nav>${NAV(u).map((it, i) => (it.grp ? `<button class="nav navgb${it.items.some(([k]) => k === app.screen) ? ' on' : ''}" data-grp="${i}" aria-haspopup="true" aria-expanded="false" title="${esc(it.items.map((x) => x[1]).join(', '))}">${esc(it.grp)} <span class="caret">▾</span></button>` : `<button class="nav${app.screen === it[0] ? ' on' : ''}" data-go="${it[0]}">${it[1]}</button>`)).join('')}</nav>
+      ${NAV(u).map((it, i) => (it.grp ? `<div class="navdrop" id="navdrop-${i}" role="menu" hidden>${it.head ? `<div class="navhead">${it.head}</div>` : ''}${it.items.map(([k, l, d]) => (k === '@logout' ? `<button class="navsub navout" role="menuitem" id="logout"><b>${esc(l)}</b>${pts(d)}</button>` : `<button class="navsub${app.screen === k ? ' on' : ''}" role="menuitem" data-go="${k}"><b>${esc(l)}</b>${pts(d)}</button>`)).join('')}</div>` : '')).join('')}
+</header>
       <main id="main"></main>`;
-    $('#logout').onclick = () => { flushSave(); leaveEditor(); St.Users.logout(); EE.portalUnlocked = false; app.project = null; app.screen = 'home'; shell(); };
-    $$('[data-go]').forEach((b) => (b.onclick = () => go(b.dataset.go)));
+    try { const on = $('.top nav .nav.on'); on && on.scrollIntoView({ inline: 'center', block: 'nearest' }); } catch (e) {}
+    { const nv = $('.top nav'); if (nv) nv.addEventListener('scroll', () => placeNavDrop()); if (nv) nv.addEventListener('wheel', (e) => { if (nv.scrollWidth > nv.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { nv.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }
+    if (!app._tbWheel) { app._tbWheel = true; const tb = () => $('.tb'); document.addEventListener('wheel', (e) => { const t = tb(); if (t && t.contains(e.target) && t.scrollWidth > t.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX) && !e.target.closest('select,input')) { t.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }
+    $('#logout').onclick = () => { closeNavDrops(); flushSave(); leaveEditor(); St.Users.logout(); EE.portalUnlocked = false; app.project = null; app.screen = 'home'; shell(); };
+    $$('[data-go]').forEach((b) => (b.onclick = () => { closeNavDrops(); go(b.dataset.go); }));
+    // onglets déroulants : la liste s'affiche sous l'onglet (position fixe, pour ne pas être coupée par la barre qui défile)
+    const openNow = app._openGrp; app._openGrp = null;
+    $$('.navgb').forEach((b) => (b.onclick = (e) => {
+      e.stopPropagation(); const d = $('#navdrop-' + b.dataset.grp), open = d.hidden; closeNavDrops(); if (!open) return;
+      const grp = NAV(St.Users.current())[+b.dataset.grp];
+      if (grp && !grp.items.some(([k]) => k === app.screen)) { app._openGrp = b.dataset.grp; go(grp.items[0][0]); return; } // affiche le contenu du premier sous-titre
+      d.hidden = false; b.setAttribute('aria-expanded', 'true'); b.classList.add('open'); placeNavDrop();
+    }));
+    if (openNow != null) { const b = $('.navgb[data-grp="' + openNow + '"]'), d = $('#navdrop-' + openNow); if (b && d) { d.hidden = false; b.setAttribute('aria-expanded', 'true'); b.classList.add('open'); setTimeout(placeNavDrop, 0); } }
   }
+  const pts = (d) => (d ? `<ul class="navpts">${[].concat(d).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''); // contenu d'un sous-titre, un élément par ligne
+  // barre de navigation : un élément = [écran, titre] ; un groupe = onglet qui se déplie sur ses sous-titres
+  const NAV = (u) => [{ grp: 'Accueil', head: `👤 Connecté : <b>${esc(u.name)}</b>`, items: [['home', 'Page d\'accueil', ['Tableau de bord', 'Derniers projets']], ['settings', 'Paramètres', ['Thème clair / sombre', 'Grille', 'Mot de passe', 'Compte']]].concat(showPortal(u) ? [['portal', 'Portail administrateur', ['Prix', 'Règles de calcul', 'Apparence', 'Contrôle à distance']]] : []).concat([['@logout', 'Déconnexion', ['Quitter le compte ' + u.name]]]) }, ['projects', 'Mes projets'], ['library', 'Bibliothèque'], ['editor', 'Atelier'], ['bat', 'Bâtiment'], ['examples', 'Exemples'], ['calc', 'Calculs'], ['learn', 'Pédagogie'],
+    { grp: 'Matériel', items: [['quant', 'Quantitatif', ['Matériel', 'Protections', 'Coffret', 'Devis']], ['compo', 'Composants', ['Liste des composants', 'Symboles', 'Normes']]] },
+    ['pv', 'Photovoltaïque'], ['bt', 'Bureau d\'études']];
+  function placeNavDrop() { // garde la liste sous son onglet, même si la barre défile
+    const b = $('.navgb.open'); if (!b) return; const d = $('#navdrop-' + b.dataset.grp), r = b.getBoundingClientRect();
+    d.style.top = Math.round(r.bottom + 4) + 'px'; d.style.left = Math.round(Math.max(6, Math.min(r.left, g.innerWidth - d.offsetWidth - 6))) + 'px';
+  }
+  function closeNavDrops() { $$('.navdrop').forEach((d) => { d.hidden = true; }); $$('.navgb').forEach((b) => { b.setAttribute('aria-expanded', 'false'); b.classList.remove('open'); }); }
+  document.addEventListener('click', (e) => { if (!e.target.closest || !e.target.closest('.navdrop,.navgb')) closeNavDrops(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeNavDrops(); });
+  g.addEventListener('resize', () => closeNavDrops());
   function leaveEditor() { flushSave(); if (app.editor) { app.editor.destroy(); app.editor = null; } }
   function go(screen, arg) {
     if (app.screen === 'editor' && screen !== 'editor') leaveEditor();
     app.screen = screen; shell(); if (!St.Users.current()) return;
-    (Object.assign({ home: renderHome, projects: renderProjects, library: renderLibrary, editor: () => renderEditor(arg), settings: renderSettings }, EE.Screens || {}))[screen](arg);
+    const grp = NAV(St.Users.current()).find((it) => it.grp && it.items.some(([k]) => k === screen));
+    if (grp) { renderGroup(grp, screen); return; }
+    screens(arg)[screen](arg);
   }
+  const screens = (arg) => Object.assign({ home: renderHome, projects: renderProjects, library: renderLibrary, editor: () => renderEditor(arg), settings: renderSettings }, EE.Screens || {});
+  // onglet à sous-titres : les contenus de tous les sous-titres sont affichés les uns sous les autres
+  function renderGroup(grp, screen) {
+    const items = grp.items.filter(([k]) => k[0] !== '@'), S = screens();
+    $('#main').innerHTML = `<div class="grpwrap">${items.map(([k, l, d]) => `<section class="grpsec" id="sec-${k}" data-k="${k}"><div class="grphead"><h2>${esc(l)}</h2>${d ? `<small>${esc([].concat(d).join(' · '))}</small>` : ''}<span class="grow"></span>${items.length > 1 ? items.filter(([o]) => o !== k).map(([o, ol]) => `<a href="#" class="grpjump" data-jump="${o}">↕ ${esc(ol)}</a>`).join('') : ''}</div><div class="grpbody" id="gs-${k}"></div></section>`).join('')}</div>`;
+    items.forEach(([k]) => { try { S[k](); } catch (e) { const b = document.getElementById('gs-' + k); if (b) b.innerHTML = '<p class="err">Affichage impossible : ' + esc(e.message) + '</p>'; } });
+    $$('.grpjump').forEach((a) => (a.onclick = (e) => { e.preventDefault(); const t = document.getElementById('sec-' + a.dataset.jump); t && t.scrollIntoView({ block: 'start', behavior: 'smooth' }); }));
+    const first = items[0] && items[0][0] === screen; const t = document.getElementById('sec-' + screen);
+    if (first) { g.scrollTo(0, 0); $('#main').scrollTop = 0; } else if (t) setTimeout(() => t.scrollIntoView({ block: 'start' }), 0);
+  }
+  // zone où un écran doit s'afficher : sa section dans une page groupée, sinon la zone principale
+  EE.main = (k) => (k && document.getElementById('gs-' + k)) || document.getElementById('main');
+  // impression : seule la section où l'on a cliqué est imprimée
+  document.addEventListener('click', (e) => { const s = e.target.closest && e.target.closest('.grpsec'); if (s) app._lastSec = s.dataset.k; }, true);
+  g.addEventListener('beforeprint', () => { $$('.grpsec').forEach((s) => s.classList.toggle('noprint-sec', !!app._lastSec && s.dataset.k !== app._lastSec)); });
+  g.addEventListener('afterprint', () => { $$('.grpsec').forEach((s) => s.classList.remove('noprint-sec')); });
   app.go = go;
 
   // ---------- connexion ----------
@@ -76,8 +120,8 @@
       <form id="lf" autocomplete="off"><label>Nom d'utilisateur<input id="lu" required list="ul"></label><datalist id="ul">${users.map((u) => `<option value="${esc(u.name)}">`).join('')}</datalist>
         ${pwField('lp', 'Mot de passe')}${pwField('lp2', 'Confirmer le mot de passe', ` id="l2" class="${reg ? '' : 'hide'}"`)}
         <p class="err" id="lerr"></p><button class="btn primary big" id="lgo">${reg ? 'Créer mon compte' : 'Se connecter'}</button></form>
-      <p class="muted small">Les comptes et projets sont enregistrés <b>sur cet appareil</b> (navigateur). Pensez à exporter vos projets pour les sauvegarder ou les transférer.</p></div></div>`;
-    bindEyes($('.login'));
+      <p class="muted small">Les comptes et projets sont enregistrés <b>sur cet appareil</b> (navigateur). Pensez à exporter vos projets pour les sauvegarder ou les transférer.</p>${EE.AndroidDL ? EE.AndroidDL.button('apk-login', 'apkline') : ''}${EE.Stats && EE.Stats.cfg().url ? '<p class="muted small" id="st-notice">📊 Quand Internet est disponible, l\'application signale à son concepteur qu\'elle est ouverte (identifiant d\'appareil, nom d\'utilisateur, version) pour compter les utilisateurs. Aucun projet ni mot de passe n\'est envoyé.</p>' : ''}</div></div>`;
+    bindEyes($('.login')); if (EE.AndroidDL) EE.AndroidDL.bind($('.login'));
     let up = reg;
     $$('.tab').forEach((b) => (b.onclick = () => { up = b.dataset.t === 'up'; $$('.tab').forEach((x) => x.classList.toggle('on', x === b)); $('#l2').classList.toggle('hide', !up); $('#lgo').textContent = up ? 'Créer mon compte' : 'Se connecter'; $('#lerr').textContent = ''; }));
     $('#lf').onsubmit = (e) => {
@@ -93,7 +137,7 @@
   // ---------- accueil ----------
   function renderHome() {
     const u = St.Users.current(), rec = St.Projects.recent(5), n = St.Projects.list().length;
-    $('#main').innerHTML = `<div class="page"><section class="hero"><img class="logoimg hero-logo" src="${EE.LOGO_FULL}" alt="Yak-élec"><div><h1>${esc(Cf().brand.name1)}<b>${esc(Cf().brand.name2)}</b></h1><p>Bonjour ${esc(u.name)} – ${esc(Cf().brand.welcome)}</p><button class="btn small ctab2" data-go="contact">✉ Me contacter</button></div></section>
+    EE.main('home').innerHTML = `<div class="page"><section class="hero"><img class="logoimg hero-logo" src="${EE.LOGO_FULL}" alt="Yak-élec"><div><h1>${esc(Cf().brand.name1)}<b>${esc(Cf().brand.name2)}</b></h1><p>Bonjour ${esc(u.name)} – ${esc(Cf().brand.welcome)}</p><button class="btn small ctab2" data-go="contact">✉ Me contacter</button></div></section>
       ${St.raw.persistent ? '' : '<div class="warn">⚠ Le stockage du navigateur est indisponible : exportez vos projets, ils ne seront pas conservés.</div>'}
       <section class="cards">
         <button class="card act" data-a="new"><span class="ic">＋</span><b>Nouveau projet</b><small>Créer un schéma</small></button>
@@ -101,13 +145,17 @@
         <button class="card act" data-a="projects"><span class="ic">📁</span><b>Mes projets</b><small>${n} projet${n > 1 ? 's' : ''}</small></button>
         <button class="card act" data-a="library"><span class="ic">🔣</span><b>Bibliothèque de symboles</b><small>${Lib.list.length} symboles</small></button>
         <button class="card act" data-a="editor"><span class="ic">✏️</span><b>Atelier de dessin</b><small>Ouvrir la feuille</small></button>
+        <button class="card act" data-a="examples"><span class="ic">📚</span><b>Exemples de circuits</b><small>${EE.Examples ? EE.Examples.list.length : 0} circuits pédagogiques prêts</small></button>
+        <button class="card act" data-a="learn"><span class="ic">🎓</span><b>Mode pédagogique</b><small>Cours, quiz, exercices corrigés</small></button>
+        <button class="card act" data-a="calc"><span class="ic">📐</span><b>Calculs électriques</b><small>Ohm, puissances, chute de tension</small></button>
         <button class="card act" data-a="pv"><span class="ic">☀️</span><b>Photovoltaïque</b><small>Panneaux, batteries, onduleur</small></button>
+        <button class="card act" data-a="bt"><span class="ic">🏗️</span><b>Bureau d'études BT</b><small>Tableaux électriques : calculs, protections, 2D / 3D, chiffrage</small></button>
         <button class="card act" data-a="quant"><span class="ic">🧮</span><b>Quantitatif et coffret</b><small>Matériel, protections, devis</small></button>
         ${showPortal(u) ? '<button class="card act" data-a="portal"><span class="ic">🛠️</span><b>Portail administrateur</b><small>Prix, règles, apparence</small></button>' : ''}
         <button class="card act" data-a="settings"><span class="ic">⚙️</span><b>Paramètres</b><small>Thème, grille, compte</small></button>
       </section>
       <section><h2>Derniers projets ouverts</h2>${rec.length ? `<div class="list">${rec.map((p) => `<button class="row" data-open="${p.id}"><b>${esc(p.name)}</b><span>${esc(EE.SCHEMAS[p.schema])} · ${esc(p.install)}</span><em>${EE.fmtDate(p.opened)}</em></button>`).join('')}</div>` : '<p class="muted">Aucun projet pour le moment. Créez votre premier schéma avec « Nouveau projet ».</p>'}</section></div>`;
-    $$('[data-a]').forEach((b) => (b.onclick = () => ({ new: newProject, projects: () => go('projects'), library: () => go('library'), editor: () => go('editor'), settings: () => go('settings'), quant: () => go('quant'), bat: () => go('bat'), pv: () => go('pv'), portal: () => go('portal') })[b.dataset.a]()));
+    $$('[data-a]').forEach((b) => (b.onclick = () => ({ new: newProject, projects: () => go('projects'), library: () => go('library'), editor: () => go('editor'), settings: () => go('settings'), quant: () => go('quant'), bat: () => go('bat'), pv: () => go('pv'), portal: () => go('portal'), examples: () => go('examples'), learn: () => go('learn'), calc: () => go('calc'), bt: () => go('bt') })[b.dataset.a]()));
     $$('[data-open]').forEach((b) => (b.onclick = () => go('editor', b.dataset.open)));
   }
   async function newProject(schema) {
@@ -117,11 +165,28 @@
   app.newProject = newProject;
 
   // ---------- projets ----------
+  // ---------- dossiers de projets ----------
+  const Folders = {
+    list() { const s = new Set(St.Settings.get().folders || []); St.Projects.list().forEach((p) => { if (p.folder) s.add(p.folder); }); return [...s].sort((a, b) => a.localeCompare(b)); },
+    add(name) { name = (name || '').trim(); if (!name) return; const l = St.Settings.get().folders || []; if (!l.includes(name)) St.Settings.set({ folders: l.concat([name]) }); },
+    async moveDialog(id, done) {
+      const p = St.Projects.get(id); if (!p) return; const fl = Folders.list();
+      const r = await modal({ title: 'Ranger dans un dossier', body: `<label>Dossier<select id="fd-s"><option value="">(aucun dossier)</option>${fl.map((f) => `<option${f === p.folder ? ' selected' : ''}>${esc(f)}</option>`).join('')}</select></label><label>ou nouveau dossier<input id="fd-n" maxlength="40" placeholder="Ex. : Classe CAP 1, Chantier Kaloum…"></label>`, buttons: [{ label: 'Annuler', value: null }, { label: 'Ranger', cls: 'primary', value: (ov) => ($('#fd-n', ov).value.trim() || $('#fd-s', ov).value) }] });
+      if (r == null) return; if (r) Folders.add(r);
+      if (app.project && app.project.id === id) { app.project.folder = r || undefined; flushSave(); }
+      const q = St.Projects.get(id); if (r) q.folder = r; else delete q.folder; St.Projects.update(q); toast(r ? 'Rangé dans « ' + r + ' »' : 'Retiré du dossier', 'ok'); done && done();
+    },
+  };
+  EE.Folders = Folders;
   function renderProjects(filter = '') {
-    const l = St.Projects.list().slice().sort((a, b) => b.modified - a.modified).filter((p) => (p.name + p.install).toLowerCase().includes(filter.toLowerCase()));
+    const fol = app.folder || '';
+    const l = St.Projects.list().slice().sort((a, b) => b.modified - a.modified).filter((p) => (p.name + p.install + (p.folder || '')).toLowerCase().includes(filter.toLowerCase()) && (!fol || (fol === '∅' ? !p.folder : p.folder === fol)));
     $('#main').innerHTML = `<div class="page"><div class="bar"><h1>Mes projets</h1><div class="grow"></div><input id="flt" placeholder="Rechercher…" value="${esc(filter)}"><button class="btn" id="imp">Importer…</button><button class="btn primary" id="np">＋ Nouveau projet</button><input type="file" id="impf" accept=".json,.eep,application/json" hidden></div>
-      ${l.length ? `<div class="table"><div class="tr th"><span>Nom</span><span>Installation</span><span>Schéma</span><span>Modifié</span><span>Actions</span></div>${l.map((p) => `<div class="tr" data-id="${p.id}"><span><b>${esc(p.name)}</b></span><span>${esc(p.install)}</span><span>${esc(EE.SCHEMAS[p.schema])}</span><span>${EE.fmtDate(p.modified)}</span><span class="acts"><button class="btn small primary" data-a="open">Ouvrir</button><button class="btn small" data-a="edit">Modifier</button><button class="btn small" data-a="dup">Dupliquer</button><button class="btn small" data-a="exp">Exporter</button><button class="btn small danger" data-a="del">Supprimer</button></span></div>`).join('')}</div>` : '<p class="muted">Aucun projet.</p>'}</div>`;
+      <div class="chips">${[['', 'Tous les projets'], ['∅', 'Sans dossier']].concat(Folders.list().map((f) => [f, '📁 ' + f])).map(([k, t]) => `<button class="chip${k === fol ? ' on' : ''}" data-fol="${esc(k)}">${esc(t)}</button>`).join('')}<button class="chip" id="fol-add">＋ Nouveau dossier</button></div>
+      ${l.length ? `<div class="table"><div class="tr th"><span>Nom</span><span>Installation</span><span>Schéma</span><span>Modifié</span><span>Actions</span></div>${l.map((p) => `<div class="tr" data-id="${p.id}"><span><b>${esc(p.name)}</b>${p.folder ? ` <small class="lvl">📁 ${esc(p.folder)}</small>` : ''}${p.sheets && p.sheets.length > 1 ? ` <small class="lvl">${p.sheets.length} feuilles</small>` : ''}</span><span>${esc(p.install)}</span><span>${esc(EE.SCHEMAS[p.schema])}</span><span>${EE.fmtDate(p.modified)}</span><span class="acts"><button class="btn small primary" data-a="open">Ouvrir</button><button class="btn small" data-a="edit">Renommer / modifier</button><button class="btn small" data-a="fold">Ranger</button><button class="btn small" data-a="dup">Dupliquer</button><button class="btn small" data-a="exp">Exporter</button><button class="btn small danger" data-a="del">Supprimer</button></span></div>`).join('')}</div>` : '<p class="muted">Aucun projet.</p>'}</div>`;
     $('#np').onclick = newProject; $('#flt').oninput = (e) => { renderProjects(e.target.value); const i = $('#flt'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); };
+    $$('[data-fol]').forEach((b) => (b.onclick = () => { app.folder = b.dataset.fol; renderProjects($('#flt').value); }));
+    $('#fol-add').onclick = async () => { const r = await modal({ title: 'Nouveau dossier', body: '<label>Nom du dossier<input id="nf" maxlength="40"></label>', buttons: [{ label: 'Annuler', value: null }, { label: 'Créer', cls: 'primary', value: (ov) => $('#nf', ov).value.trim() }] }); if (r) { Folders.add(r); app.folder = r; renderProjects($('#flt').value); } };
     $('#imp').onclick = () => $('#impf').click();
     $('#impf').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { const p = St.Projects.importJSON(await f.text()); toast('Projet importé : ' + p.name, 'ok'); renderProjects(); } catch (err) { toast(err.message, 'bad'); } };
     $$('.tr[data-id] [data-a]').forEach((b) => (b.onclick = async () => {
@@ -129,6 +194,7 @@
       try {
         if (b.dataset.a === 'open') go('editor', id);
         else if (b.dataset.a === 'edit') { const r = await projectDialog(p); if (r) { St.Projects.edit(id, r); toast('Projet modifié', 'ok'); renderProjects($('#flt').value); } }
+        else if (b.dataset.a === 'fold') Folders.moveDialog(id, () => renderProjects($('#flt').value));
         else if (b.dataset.a === 'dup') { St.Projects.duplicate(id); toast('Projet dupliqué', 'ok'); renderProjects($('#flt').value); }
         else if (b.dataset.a === 'exp') EE.Export.run('json', p);
         else if (b.dataset.a === 'del') { if (await confirmBox('Supprimer le projet', `Supprimer définitivement « <b>${esc(p.name)}</b> » ? Cette action est irréversible.`, 'Supprimer')) { St.Projects.remove(id); toast('Projet supprimé', 'ok'); renderProjects($('#flt').value); } }
@@ -176,20 +242,20 @@
     else { p = St.Projects.recent(1)[0]; if (p) St.Projects.touch(p.id); }
     if (!p) { $('#main').innerHTML = `<div class="page center"><h1>Atelier de dessin</h1><p class="muted">Aucun projet ouvert. Créez un projet pour commencer à dessiner.</p><button class="btn primary big" id="np2">＋ Nouveau projet</button></div>`; $('#np2').onclick = newProject; return; }
     p = St.Projects.get(p.id); app.project = p; const set = St.Settings.get();
-    $('#main').innerHTML = `<div class="ed"><div class="tb">
-        <div class="tgrp"><b class="pname" id="pname" title="Nom du projet"></b><span class="badge" id="pbadge"></span></div>
-        <div class="tgrp edit"><button class="btn tool on" id="t-select" title="Sélection (V)">⬉ Sélection</button><button class="btn tool" id="t-wire" title="Conducteur (W)">╱ Conducteur</button></div>
-        <div class="tgrp edit"><button class="btn" id="b-rot" title="Rotation 90° (R)">⟳ Rotation</button><button class="btn" id="b-copy" title="Copier (Ctrl+C)">Copier</button><button class="btn" id="b-paste" title="Coller (Ctrl+V)">Coller</button><button class="btn" id="b-dup" title="Dupliquer (Ctrl+D)">Dupliquer</button><button class="btn" id="b-del" title="Supprimer (Suppr)">Supprimer</button></div>
-        <div class="tgrp edit"><button class="btn" id="b-undo" title="Annuler (Ctrl+Z)">↶ Annuler</button><button class="btn" id="b-redo" title="Rétablir (Ctrl+Y)">↷ Rétablir</button></div>
-        <div class="tgrp zgrp"><button class="btn" id="b-zo" title="Réduire la feuille (zoom arrière)">−</button><input type="range" id="b-zr" min="20" max="400" step="5" value="100" title="Agrandir / réduire la feuille" aria-label="Zoom de la feuille"><button class="btn" id="b-zi" title="Agrandir la feuille (zoom avant)">+</button><button class="btn" id="b-z100" title="Revenir à 100 %">100 %</button><button class="btn" id="b-fit" title="Ajuster la vue au dessin">Ajuster</button><button class="btn" id="b-full" title="Plein écran du dessin (Échap pour quitter)">⛶ Plein écran</button><label class="chk"><input type="checkbox" id="b-grid" ${set.grid ? 'checked' : ''}>Grille</label></div>
+    $('#main').innerHTML = `<div class="ed"><div class="mbar" id="mbar"></div><div class="tb">
+        <div class="tgrp mobbtn"><button class="btn" id="m-pal" title="Liste des symboles">🔣</button><button class="btn" id="m-side" title="Panneau Propriétés / Rapport / Simulation">☰</button></div>
+        <div class="tgrp edit"><button class="btn tool on" id="t-select" title="Sélection (V)">⬉ <span class="lb">Sélection</span></button><button class="btn tool" id="t-wire" title="Conducteur (W)">╱ <span class="lb">Conducteur</span></button></div>
+        <div class="tgrp edit"><button class="btn ic" id="b-rot" title="Pivoter de 90° (R)">⟳</button><button class="btn ic" id="b-flip" title="Retourner / miroir (M)">⇋</button><button class="btn ic" id="b-copy" title="Copier (Ctrl+C)">⧉</button><button class="btn ic" id="b-paste" title="Coller (Ctrl+V)">📋</button><button class="btn ic" id="b-dup" title="Dupliquer (Ctrl+D)">⊕</button><button class="btn ic" id="b-del" title="Supprimer (Suppr)">🗑</button></div>
+        <div class="tgrp edit"><button class="btn ic" id="b-undo" title="Annuler (Ctrl+Z)">↶</button><button class="btn ic" id="b-redo" title="Rétablir (Ctrl+Y)">↷</button></div>
+        <div class="tgrp zgrp"><button class="btn ic" id="b-zo" title="Zoom arrière">−</button><input type="range" id="b-zr" min="20" max="400" step="5" value="100" title="Agrandir / réduire la feuille" aria-label="Zoom de la feuille"><button class="btn ic" id="b-zi" title="Zoom avant">+</button><button class="btn" id="b-z100" title="Revenir à 100 %">100 %</button><button class="btn ic" id="b-fit" title="Ajuster la vue au dessin">⤢</button><button class="btn ic" id="b-full" title="Plein écran du dessin (Échap pour quitter)">⛶</button><label class="chk" title="Afficher la grille"><input type="checkbox" id="b-grid" ${set.grid ? 'checked' : ''}>Grille</label></div>
         <div class="tgrp"><select id="b-mode" title="Type de schéma">${schemaOpts(p.schema)}</select></div>
-        <div class="tgrp"><button class="btn" id="b-fix" title="Corriger automatiquement les problèmes de raccordement">🛠 Réparer</button><button class="btn primary" id="b-verify">✔ Vérifier mon schéma</button><button class="btn simbtn" id="b-sim" aria-pressed="false" title="Tester le fonctionnement : lampes, moteurs, contacteurs">▶ Simuler</button>
-          <select id="b-exp" title="Exporter"><option value="">Exporter…</option><option value="pdf">PDF</option><option value="svg">SVG</option><option value="png">PNG</option><option value="json">Projet (.json)</option></select></div>
-        <div class="tgrp mobbtn"><button class="btn" id="m-pal">Symboles</button><button class="btn" id="m-side">Panneau</button></div>
+        <div class="tgrp"><button class="btn ic" id="b-fix" title="Réparer : corriger automatiquement les problèmes de raccordement">🛠</button><button class="btn primary" id="b-verify" title="Vérifier mon schéma">✔ Vérifier</button><button class="btn simbtn" id="b-sim" aria-pressed="false" title="Simuler : tester le fonctionnement (lampes, moteurs, contacteurs)">▶ Simuler</button>
+          <select id="b-exp" title="Exporter"><option value="">⬇ Exporter…</option><option value="pdf">PDF</option><option value="svg">SVG</option><option value="png">PNG</option><option value="dxf">DXF (AutoCAD)</option><option value="print">Imprimer / PDF mis en page…</option><option value="json">Projet (.json)</option></select></div>
       </div>
-      <div class="eb"><aside class="pal" id="pal"><input id="pq" placeholder="Filtrer les symboles…"><div id="pitems"></div></aside><div class="split" id="sp-pal" title="Glisser pour élargir ou réduire la liste des symboles"></div>
-        <div class="sheetwrap"><div class="simbar hide" id="simbar">▶ SIMULATION – cliquez sur les interrupteurs, boutons-poussoirs et appareils pour les actionner (le bouton-poussoir reste fermé tant que vous appuyez).</div><svg id="sheet" tabindex="0" xmlns="${'http://www.w3.org/2000/svg'}"></svg></div>
-        <div class="split" id="sp-side" title="Glisser pour élargir ou réduire le panneau"></div><aside class="side" id="side"><div class="tabs"><button class="tab on" data-p="props">Propriétés</button><button class="tab" data-p="report">Rapport</button><button class="tab hide" data-p="sim">Simulation</button></div><div id="pprops"></div><div id="preport" class="hide"></div><div id="psim" class="hide"></div></aside></div>
+      <div class="shbar" id="shbar"></div>
+      <div class="eb" id="eb"><aside class="pal win" id="pal"><div class="wbar" data-pane="pal" title="Double-clic : agrandir / restaurer"><span class="wtitle">🔣 Symboles</span><span class="wbtns"><button class="wbtn" data-w="min" title="Réduire" aria-label="Réduire">&#x2015;</button><button class="wbtn" data-w="max" title="Agrandir" aria-label="Agrandir">&#x2610;</button></span></div><div class="wbody"><input id="pq" placeholder="Filtrer les symboles…"><div id="pitems"></div></div></aside><div class="split" id="sp-pal" title="Glisser pour élargir ou réduire la liste des symboles"></div>
+        <div class="sheetwrap win" id="sheetwin"><div class="wbar" data-pane="sheet" title="Double-clic : agrandir / restaurer"><span class="wtitle">✏️ <b class="pname" id="pname"></b></span><span class="badge" id="pbadge"></span><span class="wbtns"><button class="wbtn" data-w="min" title="Réduire" aria-label="Réduire">&#x2015;</button><button class="wbtn" data-w="max" title="Agrandir" aria-label="Agrandir">&#x2610;</button></span></div><div class="sheetbody"><div class="simbar hide" id="simbar">▶ SIMULATION – cliquez sur les interrupteurs, boutons-poussoirs et appareils pour les actionner (le bouton-poussoir reste fermé tant que vous appuyez).</div><svg id="sheet" tabindex="0" xmlns="${'http://www.w3.org/2000/svg'}"></svg></div></div>
+        <div class="split" id="sp-side" title="Glisser pour élargir ou réduire le panneau"></div><aside class="side win" id="side"><div class="wbar" data-pane="side" title="Double-clic : agrandir / restaurer"><span class="wtitle">☰ Panneau</span><span class="wbtns"><button class="wbtn" data-w="min" title="Réduire" aria-label="Réduire">&#x2015;</button><button class="wbtn" data-w="max" title="Agrandir" aria-label="Agrandir">&#x2610;</button></span></div><div class="wbody"><div class="tabs"><button class="tab on" data-p="props">Propriétés</button><button class="tab" data-p="report">Rapport</button><button class="tab hide" data-p="sim">Simulation</button></div><div id="pprops"></div><div id="preport" class="hide"></div><div id="psim" class="hide"></div></div></aside></div>
       <div class="sb"><span id="sbpos">x : –  y : –</span><span id="sbtool">Outil : sélection</span><span id="sbzoom"></span><span class="grow"></span><span id="sbsave">Enregistré</span></div></div>`;
     $('#pname').textContent = p.name; $('#pbadge').textContent = EE.SCHEMAS[p.schema] + ' · ' + p.install;
     renderPalette();
@@ -201,8 +267,8 @@
       onTool: (t, a) => { $('#t-select').classList.toggle('on', t === 'select'); $('#t-wire').classList.toggle('on', t === 'wire'); $('#sbtool').textContent = 'Outil : ' + (t === 'place' ? 'placer « ' + (Lib.get(a) || {}).name + ' »' : t === 'wire' ? 'conducteur (clic = point, double-clic ou Entrée = fin)' : 'sélection'); $$('.pitem').forEach((b) => b.classList.toggle('on', b.dataset.s === a)); },
       onPointer: (pt) => { $('#sbpos').textContent = `x : ${pt[0] / EE.G}  y : ${pt[1] / EE.G}`; },
       onMarker: (id, pt) => showMarkerPop(id, pt), onView: (v) => { $('#sbzoom').textContent = 'Zoom ' + Math.round(v.k * 100) + ' %'; syncZoom(v.k); scheduleSave(); },
-      onSim: (on) => { $('.ed').classList.toggle('simon', on); $('#simbar').classList.toggle('hide', !on); $('#b-sim').classList.toggle('on', on); $('#b-sim').setAttribute('aria-pressed', on); $('#b-sim').textContent = on ? '■ Arrêter la simulation' : '▶ Simuler'; $('#side .tab[data-p=sim]').classList.toggle('hide', !on); if (on) { showTab('sim'); $('#side').classList.add('open'); } else showTab('props'); },
-      onSimTick: (s) => renderSimPanel(s), onSimChange: (s) => renderSimPanel(s),
+      onSim: (on) => { $('.ed').classList.toggle('simon', on); $('#simbar').classList.toggle('hide', !on); $('#b-sim').classList.toggle('on', on); $('#b-sim').setAttribute('aria-pressed', on); $('#b-sim').textContent = on ? '■ Arrêter' : '▶ Simuler'; $('#side .tab[data-p=sim]').classList.toggle('hide', !on); if (on) { showTab('sim'); $('#side').classList.add('open'); } else showTab('props'); },
+      onSimTick: (s) => renderSimPanel(s), onSimChange: (s) => renderSimPanel(s), onSimPause: () => renderSimPanel(app.editor && app.editor.sim),
       onEditRequest: () => { const i = $('#f-label'); i && (i.focus(), i.select()); },
     });
     $('#sbzoom').textContent = 'Zoom ' + Math.round(ed.view.k * 100) + ' %';
@@ -211,19 +277,19 @@
     updateHist(); renderProps({ comps: [], wires: [] });
     const B = (id, f) => ($('#' + id).onclick = f);
     B('t-select', () => ed.setTool('select')); B('t-wire', () => ed.setTool('wire'));
-    B('b-rot', () => ed.rotate()); B('b-copy', () => { ed.copy() ? toast('Copié') : toast('Rien à copier', 'bad'); }); B('b-paste', () => ed.paste()); B('b-dup', () => ed.duplicate()); B('b-del', () => ed.del());
+    B('b-rot', () => ed.rotate()); B('b-flip', () => ed.flip()); B('b-copy', () => { ed.copy() ? toast('Copié') : toast('Rien à copier', 'bad'); }); B('b-paste', () => ed.paste()); B('b-dup', () => ed.duplicate()); B('b-del', () => ed.del());
     B('b-undo', () => ed.undo()); B('b-redo', () => ed.redo()); B('b-zo', () => ed.zoomOut()); B('b-zi', () => ed.zoomIn()); B('b-fit', () => ed.fit());
     $('#b-grid').onchange = (e) => { St.Settings.set({ grid: e.target.checked }); ed.setSettings({ grid: e.target.checked }); };
     $('#b-mode').onchange = (e) => { p.schema = e.target.value; ed.setMode(p.schema); applyModeUI(p.schema); $('#pbadge').textContent = EE.SCHEMAS[p.schema] + ' · ' + p.install; scheduleSave(); };
     B('b-verify', () => runVerify()); B('b-fix', repair); applyModeUI(p.schema);
     B('b-sim', () => { if (ed.sim) ed.stopSim(); else { ed.startSim(); renderSimPanel(ed.sim); } });
-    $('#b-exp').onchange = async (e) => { const k = e.target.value; e.target.value = ''; if (!k) return; flushSave(); try { await EE.Export.run(k, p); toast('Export ' + k.toUpperCase() + ' prêt', 'ok'); } catch (err) { toast(err.message, 'bad'); } };
+    $('#b-exp').onchange = async (e) => { const k = e.target.value; e.target.value = ''; if (!k) return; flushSave(); if (k === 'print') { EE.EdMenu && EE.EdMenu.printDialog(p); return; } try { await EE.Export.run(k, p); toast('Export ' + k.toUpperCase() + ' prêt', 'ok'); } catch (err) { toast(err.message, 'bad'); } };
     $('#pq').oninput = renderPalette;
     $$('#side .tab').forEach((b) => (b.onclick = () => showTab(b.dataset.p)));
     const syncZoom = (k) => { const r = $('#b-zr'); if (r) r.value = Math.round(k * 100); const b = $('#b-z100'); if (b) b.textContent = Math.round(k * 100) + ' %'; };
     syncZoom(ed.view.k);
     $('#b-zr').oninput = (e) => ed.setZoom(+e.target.value / 100); B('b-z100', () => ed.setZoom(1));
-    const setFull = (on) => { document.body.classList.toggle('yk-full', on); $('#b-full').textContent = on ? '✕ Quitter le plein écran' : '⛶ Plein écran'; setTimeout(() => ed.fit && ed.fit(), 60); };
+    const setFull = (on) => { document.body.classList.toggle('yk-full', on); $('#b-full').textContent = on ? '✕' : '⛶'; $('#b-full').title = on ? 'Quitter le plein écran (Échap)' : 'Plein écran du dessin (Échap pour quitter)'; setTimeout(() => ed.fit && ed.fit(), 60); };
     B('b-full', () => setFull(!document.body.classList.contains('yk-full')));
     if (!app._fullKey) { app._fullKey = true; document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && document.body.classList.contains('yk-full')) { const b = document.getElementById('b-full'); if (b) b.click(); else document.body.classList.remove('yk-full'); } }); }
     document.body.classList.remove('yk-full');
@@ -244,6 +310,7 @@
     drag('sp-pal', 'pal', 1, 140, 480); drag('sp-side', 'side', -1, 200, 700);
     B('m-pal', () => $('#pal').classList.toggle('open')); B('m-side', () => $('#side').classList.toggle('open'));
     setStatus('Enregistré'); $('#sheet').focus();
+    if (EE.EdMenu) EE.EdMenu.mount({ ed, p, flushSave, scheduleSave, runVerify, repair, renderProps, renderPalette, showTab, setFull, newProject, go, setStatus });
   }
   function showTab(t) { $$('#side .tab').forEach((x) => x.classList.toggle('on', x.dataset.p === t)); $('#pprops').classList.toggle('hide', t !== 'props'); $('#preport').classList.toggle('hide', t !== 'report'); $('#psim').classList.toggle('hide', t !== 'sim'); }
   function renderSimPanel(sim) {
@@ -251,9 +318,10 @@
     const grp = (title, cls) => { const l = v.items.filter((i) => cls.includes(i.cls)); return l.length ? `<h4>${title}</h4>` + l.map((i) => `<div class="sitem ${i.on ? 'on' : ''} ${i.cls}"><span class="dot"></span><div><b>${esc(i.label || i.name)}</b> <small>${esc(i.name)}</small><br>${esc(i.text)}</div></div>`).join('') : ''; };
     el.innerHTML = `<h3>Simulation en cours</h3><p class="small muted">Cliquez sur les appareils du schéma. Un bouton-poussoir reste fermé tant que vous maintenez le clic.</p>` +
       (v.alerts.length ? v.alerts.map((m) => `<div class="rep bad">⚠ ${esc(m)}</div>`).join('') : '') + (v.log.length ? v.log.map((m) => `<div class="rep warn">⚡ ${esc(m)}</div>`).join('') : '') +
-      grp('Récepteurs', ['load', 'motor']) + grp('Bobines et contacteurs', ['coil']) + grp('Protections', ['trip', 'dev']) +
-      `<div class="btnrow"><button class="btn" id="s-reset">↺ Réinitialiser</button><button class="btn danger" id="s-stop">■ Arrêter</button></div>`;
-    $('#s-reset').onclick = () => { sim.reset(); app.editor.render(); renderSimPanel(sim); }; $('#s-stop').onclick = () => app.editor.stopSim();
+      grp('Récepteurs', ['load', 'motor']) + grp('Bobines, automates et contacteurs', ['coil']) + grp('Protections', ['trip', 'dev']) +
+      ((v.elec || []).length ? `<h4>Tensions et courants calculés</h4><table class="qt small elec"><thead><tr><th>Récepteur</th><th class="r">U</th><th class="r">P</th><th class="r">I</th></tr></thead><tbody>${v.elec.map((x) => `<tr><td><b>${esc(x.label)}</b><br><small>${esc(x.pots)}</small></td><td class="r">${x.u ? x.u + ' V' : '?'}</td><td class="r">${x.P != null ? (x.P >= 1000 ? (x.P / 1000).toFixed(2).replace('.', ',') + ' kW' : Math.round(x.P) + ' W') : '—'}</td><td class="r">${x.I != null ? x.I.toFixed(2).replace('.', ',') + ' A' : '—'}</td></tr>`).join('')}</tbody></table><p class="small muted">U d'après les potentiels (230 V phase-neutre, 400 V entre phases, valeur des sources continues et des transformateurs). I = P / U (moteurs : P / (U·cos φ·η), triphasé : P / (√3·U·cos φ·η), avec cos φ 0,85 et η 0,9 indicatifs). Indiquez la puissance dans « Valeur » (ex. 100 W, 1,5 kW). Valeurs théoriques : ce n'est pas une mesure ni une validation de sécurité.</p>` : '') +
+      `<div class="btnrow"><button class="btn" id="s-pause">${app.editor && app.editor.simPaused ? '▶ Reprendre' : '⏸ Pause'}</button><button class="btn" id="s-reset">↺ Réinitialiser</button><button class="btn danger" id="s-stop">■ Arrêter</button></div>` + (app.editor && app.editor.simPaused ? '<p class="small rep warn">⏸ Simulation en pause : les temporisations sont figées.</p>' : '');
+    $('#s-reset').onclick = () => { sim.reset(); app.editor.render(); renderSimPanel(sim); }; $('#s-pause').onclick = () => { app.editor.pauseSim(); }; $('#s-stop').onclick = () => app.editor.stopSim();
   }
   function renderPalette() {
     const q = ($('#pq') ? $('#pq').value : '').toLowerCase(); let h = '';
@@ -273,13 +341,13 @@
     if (cs.length === 1 && !ws.length) {
       const c = cs[0], d = Lib.get(c.type);
       el.innerHTML = `<h3>${esc(d.name)}</h3><p class="small muted">${esc(d.desc)}</p>
-        ${['connexion', 'croisement', 'terre', 'neutre'].includes(c.type) ? '' : c.type === 'phase' ? `<label>Phase<select id="f-val">${opts(['L1', 'L2', 'L3'], c.val)}</select></label>` : `<label>Identification (repère)<input id="f-label" value="${esc(c.label)}" placeholder="${esc(d.prefix || '')}1"></label><label>Valeur / calibre<input id="f-val" value="${esc(c.val || '')}" placeholder="ex. 16 A, 60 W…"></label>`}
-        <p class="small">Position : (${c.x / EE.G}, ${c.y / EE.G}) · Rotation : ${c.rot || 0}°</p>
-        <div class="btnrow"><button class="btn" id="f-rot">⟳ Pivoter</button><button class="btn danger" id="f-del">Supprimer</button><button class="btn" id="f-fiche">Fiche</button></div>`;
+        ${d.annot ? `<label>Texte<textarea id="f-val" rows="2">${esc(c.val || '')}</textarea></label>` : d.plc ? `<label>Repère<input id="f-label" value="${esc(c.label)}"></label><label>Programme (une équation par sortie, séparées par ;)<textarea id="f-val" rows="4" spellcheck="false">${esc(c.val || '')}</textarea></label><p class="small muted">Mots : ET, OU, NON, ( ), I1…I${d.plc.nIn}, Q1…Q${d.plc.nOut}. Ex. : Q1 = (I1 OU Q1) ET NON I2</p>${EE.PLC.parseProgram(c.val).errors.map((m) => `<p class="small err">⚠ ${esc(m)}</p>`).join('')}` : ['connexion', 'croisement', 'terre', 'neutre'].includes(c.type) ? '' : c.type === 'phase' ? `<label>Phase<select id="f-val">${opts(['L1', 'L2', 'L3'], c.val)}</select></label>` : `<label>Identification (repère)<input id="f-label" value="${esc(c.label)}" placeholder="${esc(d.prefix || '')}1"></label><label>Valeur / calibre<input id="f-val" value="${esc(c.val || '')}" placeholder="ex. 16 A, 60 W…"></label>`}
+        <p class="small">Position : (${c.x / EE.G}, ${c.y / EE.G}) · Rotation : ${c.rot || 0}°${c.flip ? ' · retourné' : ''}${d.term.length ? ' · bornes : ' + d.term.map((x) => esc(x.id)).join(', ') : ''}</p>
+        <div class="btnrow"><button class="btn" id="f-rot">⟳ Pivoter</button><button class="btn" id="f-flip">⇋ Retourner</button><button class="btn danger" id="f-del">Supprimer</button><button class="btn" id="f-fiche">Fiche</button></div>`;
       const lab = $('#f-label'), val = $('#f-val');
       if (lab) lab.onchange = () => ed.updateSelected({ label: lab.value.trim() });
       if (val) val.onchange = () => ed.updateSelected({ val: val.value });
-      $('#f-rot').onclick = () => ed.rotate(); $('#f-del').onclick = () => ed.del(); $('#f-fiche').onclick = () => symbolSheet(c.type);
+      $('#f-rot').onclick = () => ed.rotate(); $('#f-flip').onclick = () => ed.flip(); $('#f-del').onclick = () => ed.del(); $('#f-fiche').onclick = () => symbolSheet(c.type);
     } else if (ws.length === 1 && !cs.length) {
       const w = ws[0];
       if (p.schema === 'architectural') { el.innerHTML = `<h3>Mur</h3><p class="small muted">${w.pts.length} points. Supprimez-le avec Suppr, déplacez-le en sélectionnant puis en tirant.</p>`; return; }
@@ -289,19 +357,19 @@
       $('#f-n').onchange = () => ed.updateSelected({ n: $('#f-n').value }); $('#f-d').onchange = () => ed.updateSelected({ desig: $('#f-d').value.trim() });
       $('#f-del').onclick = () => ed.del();
     } else if (cs.length + ws.length > 1) {
-      el.innerHTML = `<h3>${cs.length} composant(s), ${ws.length} conducteur(s)</h3><div class="btnrow"><button class="btn" id="f-rot">⟳ Pivoter</button><button class="btn" id="f-dup">Dupliquer</button><button class="btn danger" id="f-del">Supprimer</button></div>`;
-      $('#f-rot').onclick = () => ed.rotate(); $('#f-dup').onclick = () => ed.duplicate(); $('#f-del').onclick = () => ed.del();
+      el.innerHTML = `<h3>${cs.length} composant(s), ${ws.length} conducteur(s)</h3><div class="btnrow"><button class="btn" id="f-rot">⟳ Pivoter</button><button class="btn" id="f-flip">⇋ Retourner</button><button class="btn" id="f-dup">Dupliquer</button><button class="btn danger" id="f-del">Supprimer</button></div>`;
+      $('#f-rot').onclick = () => ed.rotate(); $('#f-flip').onclick = () => ed.flip(); $('#f-dup').onclick = () => ed.duplicate(); $('#f-del').onclick = () => ed.del();
     } else {
       const doc = ed.doc;
       el.innerHTML = `<h3>${esc(p.name)}</h3><p class="small">${esc(EE.SCHEMAS[p.schema])} · ${esc(p.install)}<br>${doc.comps.length} composant(s) · ${doc.wires.length} conducteur(s)</p>
         <h4>Mode d'emploi</h4><ol class="howto"><li>Choisissez un symbole dans la liste de gauche, puis cliquez sur la feuille pour le déposer.</li><li>Outil <b>Conducteur</b> : cliquez sur une borne, puis sur les points suivants ; terminez sur une autre borne (ou double-clic).</li><li>Pour une dérivation, terminez sur un conducteur existant : une <b>jonction</b> est ajoutée.</li><li>Un simple croisement <b>n'est pas</b> une connexion.</li><li>Cliquez sur <b>Vérifier mon schéma</b> pour obtenir le rapport.</li></ol>
-        <p class="small muted">Raccourcis : V sélection · W conducteur · R pivoter · X coude H/V · Suppr · Ctrl+Z/Y · Ctrl+C/V/D · Échap.</p>`;
+        <p class="small muted">Raccourcis : V sélection · W conducteur · R pivoter · M retourner · X coude H/V · Suppr · Ctrl+Z/Y · Ctrl+X/C/V/D · Échap. Tirez un conducteur sélectionné pour déplacer un de ses segments sans le débrancher.</p>`;
     }
   }
   function applyModeUI(mode) {
     const arch = mode === 'architectural';
-    $('#t-wire').textContent = arch ? '▬ Mur' : '╱ Conducteur'; $('#t-wire').title = arch ? 'Tracer un mur (W)' : 'Conducteur (W)';
-    $('#b-verify').textContent = arch ? '📋 Bilan du plan' : '✔ Vérifier mon schéma'; $('#b-sim').classList.toggle('hide', arch);
+    $('#t-wire').innerHTML = arch ? '▬ <span class="lb">Mur</span>' : '╱ <span class="lb">Conducteur</span>'; $('#t-wire').title = arch ? 'Tracer un mur (W)' : 'Conducteur (W)';
+    $('#b-verify').textContent = arch ? '📋 Bilan' : '✔ Vérifier'; $('#b-sim').classList.toggle('hide', arch);
     if (arch && app.editor && app.editor.sim) app.editor.stopSim();
     renderPalette();
   }
@@ -371,15 +439,15 @@
   // ---------- paramètres ----------
   function renderSettings() {
     const s = St.Settings.get(), u = St.Users.current();
-    $('#main').innerHTML = `<div class="page narrow"><h1>Paramètres</h1>
+    EE.main('settings').innerHTML = `<div class="page narrow"><h1>Paramètres</h1>
       <section class="card flat"><h2>Affichage</h2><label class="chk"><input type="checkbox" id="s-dark" ${s.theme === 'dark' ? 'checked' : ''}> Thème sombre</label>
         <label class="chk"><input type="checkbox" id="s-grid" ${s.grid ? 'checked' : ''}> Afficher la grille dans l'atelier</label>
         <label class="chk"><input type="checkbox" id="s-auto" ${s.autolabel ? 'checked' : ''}> Identifier automatiquement les nouveaux composants (S1, H1, Q1…)</label>
         <label class="chk"><input type="checkbox" id="s-term" ${s.terminalMarks ? 'checked' : ''}> Marquer les bornes (orange = libre, vert = reliée)</label></section>
       <section class="card flat"><h2>Compte : ${esc(u.name)}</h2>${pwField('pw0', 'Ancien mot de passe')}${pwField('pw1', 'Nouveau mot de passe')}<p class="err" id="pwerr"></p>
         <div class="btnrow"><button class="btn" id="pwgo">Changer le mot de passe</button><button class="btn danger" id="delacc">Supprimer mon compte et mes projets</button></div></section>
-      <section class="card flat"><h2>À propos</h2><p>Yak-élec-pro V${EE.VERSION} – données enregistrées localement sur cet appareil (${St.raw.persistent ? 'stockage actif' : 'stockage indisponible'}). ${St.Projects.list().length} projet(s).</p></section></div>`;
-    bindEyes($('.page'));
+      <section class="card flat"><h2>À propos</h2><p>Yak-élec-pro V${EE.VERSION} – données enregistrées localement sur cet appareil (${St.raw.persistent ? 'stockage actif' : 'stockage indisponible'}). ${St.Projects.list().length} projet(s).</p>${EE.AndroidDL ? EE.AndroidDL.button('apk-set') : ''}</section></div>`;
+    bindEyes(EE.main('settings')); if (EE.AndroidDL) EE.AndroidDL.bind(EE.main('settings'));
     const bind = (id, k, f) => ($('#' + id).onchange = (e) => { St.Settings.set({ [k]: f(e.target) }); if (k === 'theme') document.documentElement.dataset.theme = St.Settings.get().theme; });
     bind('s-dark', 'theme', (t) => (t.checked ? 'dark' : 'light')); bind('s-grid', 'grid', (t) => t.checked); bind('s-auto', 'autolabel', (t) => t.checked); bind('s-term', 'terminalMarks', (t) => t.checked);
     $('#pwgo').onclick = () => { try { St.Users.changePassword($('#pw0').value, $('#pw1').value); toast('Mot de passe modifié', 'ok'); $('#pw0').value = $('#pw1').value = ''; $('#pwerr').textContent = ''; } catch (e) { $('#pwerr').textContent = e.message; } };

@@ -42,6 +42,8 @@
     const ambiguous = [];
     // 1. bornes qui coïncident (contact direct)
     Object.values(byCoord).forEach((l) => { for (let i = 1; i < l.length; i++) uf.union(l[0].k, l[i].k); });
+    // 1 bis. liaisons internes des barres et bornes (toutes les bornes d'un même groupe sont au même potentiel)
+    doc.comps.forEach((c) => { const d = Lib.get(c.type); if (d && d.bridge) d.bridge.forEach((grp) => { for (let i = 1; i < grp.length; i++) uf.union('T:' + c.id + '.' + grp[0], 'T:' + c.id + '.' + grp[i]); }); });
     // 2. conducteurs
     const epIndex = {};
     doc.wires.forEach((w) => {
@@ -120,6 +122,7 @@
     PE_OPEN: ['Borne de terre non raccordée', 'Reliez cette borne de terre (PE) au symbole « Terre » avec un conducteur : c\'est obligatoire pour la sécurité des personnes (NF C 15-100).'],
     SRC_OPEN: ['Source non raccordée', 'Tracez un conducteur depuis la borne de cette source (phase, neutre ou terre) vers le circuit à alimenter.'],
     TERM_OPEN: ['Borne non raccordée', 'Tracez un conducteur depuis cette borne vers le composant suivant. Si la borne ne sert pas (contact auxiliaire inutilisé), vous pouvez l\'ignorer.'],
+    SHORT_IF: ['Verrouillage manquant', 'Deux contacteurs ne doivent jamais être fermés ensemble (inversion de sens, étoile-triangle) : placez un contact NF de chaque contacteur en série avec la bobine de l\'autre (verrouillage électrique), et si possible un verrouillage mécanique.'],
     SHORT: ['Court-circuit', 'La phase et le neutre (ou deux phases) sont reliés sans récepteur entre eux. Insérez un récepteur (lampe, moteur, résistance…) entre les deux, ou supprimez le conducteur qui les relie directement.'],
     OPEN: ['Circuit ouvert (récepteur non alimenté)', 'Une borne du récepteur n\'est reliée à aucune source. Reliez une borne à la phase (en passant par l\'interrupteur et le disjoncteur) et l\'autre borne au neutre.'],
     SAME_POT: ['Récepteur mal branché', 'Les deux bornes du récepteur sont au même potentiel (par exemple les deux sur la phase). Reliez une borne à la phase et l\'autre au neutre (ou à une autre phase).'],
@@ -136,7 +139,7 @@
     if (!nonEmpty.length && !doc.wires.length) return { issues, ok: true, stats: stats(), empty: true, A };
 
     // --- Identification des composants
-    const needLabel = (c) => !['connexion', 'croisement', 'terre', 'phase', 'neutre'].includes(c.type);
+    const needLabel = (c) => !['connexion', 'croisement', 'terre', 'phase', 'neutre'].includes(c.type) && !(Lib.get(c.type) || {}).noLabel;
     const seenLabels = {};
     doc.comps.forEach((c) => {
       if (!needLabel(c)) return;
@@ -145,7 +148,7 @@
     });
     // les contacts (KM1…) partagent volontairement le repère de leur bobine
     Object.values(seenLabels).forEach((l) => { const prim = l.filter((c) => !Lib.get(c.type).contact); if (prim.length > 1) prim.forEach((c) => add('warning', 'DUP_ID', `Identification en double : « ${c.label} » (${prim.length} composants).`, c.x, c.y, { cid: c.id })); });
-    doc.comps.forEach((c) => { const d = Lib.get(c.type); if (d.contact && c.label && !doc.comps.some((x) => Lib.get(x.type).coil && x.label === c.label)) add('warning', 'CONTACT_NO_COIL', `Contact « ${c.label} » : aucune bobine ou aucun contacteur portant le même repère.`, c.x, c.y, { cid: c.id }); });
+    doc.comps.forEach((c) => { const d = Lib.get(c.type); if (d.contact && c.label && !doc.comps.some((x) => (Lib.get(x.type).coil || (d.owners || []).includes(x.type)) && x.label === c.label)) add('warning', 'CONTACT_NO_COIL', `Contact « ${c.label} » : aucune bobine ou aucun contacteur portant le même repère.`, c.x, c.y, { cid: c.id }); });
 
     // --- Fils non raccordés / conducteurs isolés
     const isolatedWires = new Set();
@@ -191,6 +194,19 @@
       const r = reach(A, nid, ['sw']); r.nets.forEach((m) => doneNets.add(m));
       if (r.pots.size > 1) {
         const net = A.nets[nid]; const pt = net.terms[0] ? { x: net.terms[0].x, y: net.terms[0].y } : { x: net.wires[0].pts[0][0], y: net.wires[0].pts[0][1] };
+        // court-circuit conditionnel : n'existe que si plusieurs contacteurs (repères différents) sont fermés ensemble
+        const inG = new Set(r.nets), coilCtl = (cid) => { const c = A.comps[cid], d = c && Lib.get(c.type); return !!(d && c.label && (d.contact || d.coil) && !(d.owners)); };
+        const fixed = { sw: A.edges.sw.filter((e) => !coilCtl(e[2])), pa: [] }; const B2 = Object.assign({}, A, { edges: fixed });
+        const uncond = r.nets.some((m) => reach(B2, m, ['sw']).pots.size > 1);
+        if (!uncond) {
+          const labs = [...new Set(A.edges.sw.filter((e) => coilCtl(e[2]) && inG.has(e[0]) && inG.has(e[1])).map((e) => A.comps[e[2]].label))];
+          if (labs.length >= 2) {
+            const nfOf = (l) => doc.comps.some((c) => c.label === l && /^contact_nf/.test(c.type));
+            const locked = labs.filter(nfOf).length >= 2;
+            if (!locked) add('warning', 'SHORT_IF', `Court-circuit si ${labs.join(' et ')} sont fermés en même temps : ${[...r.pots].join(' et ')} seraient reliés. Ajoutez un verrouillage (contacts NF croisés).`, pt.x, pt.y, net.terms[0] ? { cid: net.terms[0].cid } : { wid: net.wires[0].id });
+            return;
+          }
+        }
         add('error', 'SHORT', `Court-circuit possible : ${[...r.pots].map((p) => p.replace(/^c[a-z0-9]+\./, 'secondaire ')).join(' et ')} sont reliés sans charge entre eux.`, pt.x, pt.y, net.terms[0] ? { cid: net.terms[0].cid } : { wid: net.wires[0].id });
       }
     });

@@ -6,9 +6,25 @@ android {
         applicationId 'com.yakelec.pro'
         minSdk 24
         targetSdk 34
-        versionCode 194
-        versionName '1.9.4'
+        versionCode 1130
+        versionName '1.13.0'
     }
-    buildTypes { release { minifyEnabled false } }
+    // Signature FIXE (facultative mais conseillée) : fournie par le workflow GitHub à partir des secrets
+    // YAK_KEYSTORE_B64, YAK_KEYSTORE_PASSWORD et YAK_KEY_ALIAS (voir docs/GUIDE_ANDROID.md). Sans ces secrets,
+    // l'APK est signé avec une clé de test qui change à chaque fabrication.
+    def ks = System.getenv('YAK_KEYSTORE')
+    signingConfigs {
+        if (ks) {
+            yak {
+                storeFile file(ks)
+                storePassword System.getenv('YAK_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('YAK_KEY_ALIAS') ?: 'yak'
+                keyPassword System.getenv('YAK_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; signingConfig ks ? signingConfigs.yak : signingConfigs.debug }
+    }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

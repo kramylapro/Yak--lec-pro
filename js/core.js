@@ -2,7 +2,7 @@
 (function (g) {
   'use strict';
   const EE = g.EE = g.EE || {};
-  EE.VERSION = '1.9.4';
+  EE.VERSION = '1.13.0';
   EE.G = 20; // pas de grille (px)
   EE.uid = (p = 'id') => p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
   EE.clone = (o) => JSON.parse(JSON.stringify(o));

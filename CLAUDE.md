@@ -7,7 +7,7 @@
 - **Propriétaire / utilisateur** : enseignant d'électricité du bâtiment (CAP Électricité Bâtiment, Guinée), **sans connaissance en programmation** : l'IA doit livrer des fichiers **complets, prêts à l'emploi**, expliquer en français simple, et ne pas demander à l'utilisateur de coder. Contact : voir le menu *Contact* de l'application.
 - **Public final** : élèves, enseignants, électriciens. **Langue de l'interface : français.** Monnaie par défaut : GNF.
 - **Plateformes** : ordinateur (Windows 10 et plus récents) et Android. **Hors ligne obligatoire**, sans dépendance externe (aucun CDN, aucune bibliothèque téléchargée).
-- **Version actuelle** : voir `EE.VERSION` dans `js/core.js` (V1.8.0 au moment de la rédaction).
+- **Version actuelle** : voir `EE.VERSION` dans `js/core.js` (V1.10.7 au moment de la rédaction).
 
 ## 2. Règles impératives (ne jamais enfreindre)
 1. **Ne jamais écrire le mot de passe administrateur** (ni aucun mot de passe) en clair dans le code, les documents ou les messages. Il n'existe que sous forme de **hachage salé** (`Config.checkAdminPassword` dans `js/config.js`). Pour le changer : calculer un nouveau hachage et remplacer la constante, sans publier le mot de passe.
@@ -17,13 +17,14 @@
 5. **Honnêteté technique** : les symboles sont *simplifiés d'après la norme* (pas les planches officielles) ; les normes citées (EN 60898-1, EN 61008-1, NF C 15-100, EN 62548…) sont écrites de mémoire et **doivent être validées** par l'utilisateur sur les textes en vigueur ; les valeurs photovoltaïques par défaut (ensoleillement 4,5 kWh/m²/j, etc.) sont **indicatives**. Ne jamais prétendre le contraire.
 6. Ne rien inventer : si une donnée manque (prix, norme, caractéristique d'un appareil), le dire et proposer une valeur modifiable dans le portail.
 7. Ne pas reproduire de logos/œuvres protégés ; le logo YAK-ELEC appartient au propriétaire (déjà intégré).
+8. Ne jamais écrire `</script>`, `</body>`, `</head>` ou `</html>` en clair dans le code JavaScript (par ex. dans un `srcdoc` ou un modèle d'impression) : écrire `<\/body>` etc. Le lanceur Windows (`desktop/main.go`) et `build.py` insèrent leurs scripts avant la DERNIÈRE balise `</body>` de la page (correctif V1.11.1 : code affiché en texte sous l'écran de connexion).
 
 ## 3. Architecture (où se trouve quoi)
 Application web **vanilla JS + SVG + localStorage**, scripts classiques sous l'espace de noms global `EE` (fonctionne en double-clic, `file://`).
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | Charge les scripts **dans cet ordre** : core, logo, library, library_ind, library_src, library_bat, engine, sim, store, config, quant, pv, render, export, editor, quant_ui, pv_ui, compo_ui, bat_ui, contact, portal, app, fx3d |
+| `index.html` | Charge les scripts **dans cet ordre** : core, logo, library, library_ind, library_src, library_bat, library_ext, engine, fixer, sim, store, config, quant, pv, render, export, editor, quant_ui, pv_ui, compo_ui, bat_ui, calc, examples, examples_ui, pedago, menu, contact, portal, app, fx3d, remote |
 | `css/style.css` | Tous les styles (thèmes clair/sombre par variables CSS, effet 3D en fin de fichier) |
 | `js/core.js` | `EE.VERSION`, utilitaires (`esc`, `uid`, `clone`), SHA-256 |
 | `js/logo.js` | Logos en base64 |
@@ -133,3 +134,65 @@ Règles : ne jamais stocker le jeton GitHub ni le mot de passe admin ; la foncti
 Tests : `python3 tests/remote_tests.py`.
 
 | `js/fixer.js` | Assistant de dépannage : `EE.Fixer.suggest(doc)` → actions {issueId, label, safe, apply(doc)} ; `autoFix(doc)` applique les actions sûres (multi-passes). `EE.Engine.HELP` = titres et « comment corriger » par code d'anomalie. `editor.mutate(fn)` = modification avec historique (annulable). |
+
+
+## Ajouts V1.10 – Atelier complet, exemples, calculs, pédagogie
+| Fichier | Rôle |
+|---|---|
+| `js/library_ext.js` | 26 symboles (catégories **Distribution**, **Automatisme**, **Annotations** + compléments). Propriétés nouvelles des symboles : `bridge` (groupes de bornes reliées en interne : barres, bornes), `noLabel`/`annot` (annotations, `bboxFn` selon la longueur du texte), `timerOff` (bobine temporisée au repos), `counter` (compteur), `plc:{nIn,nOut}` (automate), `motor6` (moteur 6 bornes), `owners` (contacts dont le « propriétaire » n'est pas une bobine, ex. relais thermique). `EE.PLC.parseProgram/evalExpr` : langage ET/OU/NON analysé sans `eval`. |
+| `js/menu.js` | `EE.EdMenu.mount(h)` appelé à la fin de `renderEditor` (barre de menus, onglets de feuilles, fenêtre d'impression `printDialog`). `EE.Sheets.ensure(p)`. **Modèle des feuilles** : `p.sheets=[{id,name,doc,view}]`, `p.sheet` = index ouvert ; la feuille ouverte est **dans `p.doc`** (son `sheets[i].doc` vaut `null`) ; `EE.Export.sheetsOf(p)` rend la liste complète. Anciennes données : une feuille créée à l'ouverture. |
+| `js/examples.js` / `examples_ui.js` | `EE.Examples.list` (12 circuits construits sur la grille avec `B()`, `ladder()`, `powerStack()`), `components(doc)`, `scenario(ex, doc?)` = rejoue `ex.sim` (`press`, `on`, `coil`, `dir`, `coupling`, `wait`). Écran `examples`. |
+| `js/calc.js` | `EE.Calc.{ohm,puissances,courant,resistance,chute,moteur,facteur}` : fonctions pures `{ok,res,fx,warn}` ; écran `calc`. |
+| `js/pedago.js` | Écran `learn` : cours (`COURSES` + `eep.pedago.courses`), quiz, exercices (`eep.pedago.exercises`, intégrés `x_<exemple>`), copies (`eep.pedago.subs`), scores (`eep.pedago.scores.<uid>`). `EE.Pedago.correct(ref, doc, scenario)` : compare les **signatures de réseaux** (repère|type|borne + potentiels) → note /20. Projet d'exercice : `p.exercise={id,title,consigne}`. Fichiers échangés : `yak-elec-pro-exercice`, `yak-elec-pro-remise`, `yak-elec-pro-cours`. |
+| `js/export.js` | `layoutPages`, `pagedPdf` (PDF multipage A4/A3/A2 + cartouche), `printPages`, `dxfBlob` (DXF R12 depuis le rendu SVG : `dxfFromMarkup`, `pathPolys`). |
+| `js/editor.js` | `flip` (`c.flip`, miroir avant rotation, pris en compte par `Library.termWorld/bbox` et `Render`), `cut`, déplacement de segment (`drag.type==='seg'`), `pauseSim`, bornes du composant sélectionné (`.tsel`). |
+| `js/sim.js` | Ctx des contacts : `coil, done, off, plc, cnt, therm` ; `view.elec` = tensions/courants (`potVolt`, `powerW`). |
+| `js/engine.js` | Ponts internes (`bridge`) ; `SHORT_IF` = court-circuit conditionnel (≥ 2 contacteurs de repères différents) sans verrouillage NF croisé. |
+Tests : `python3 tests/v110_tests.py [fichier]` (49 tests W). Pour lancer `run_tests.py` sans connaître le mot de passe : faire une **copie de test** du projet dans laquelle on remplace le hachage de `checkAdminPassword` par celui d'un mot de passe de test (ne jamais livrer cette copie).
+
+### V1.10.1 – sous-fenêtres
+Gabarit de l'atelier (`renderEditor`) : `#eb` contient `#pal.win`, `#sheetwin.win` (feuille : `.sheetbody` > `#simbar` + `svg#sheet`), `#side.win` ; chaque fenêtre a une `.wbar[data-pane]` (titre, boutons `.wbtn[data-w=min|max]`) et un contenu `.wbody`. `EE.Panes` (menu.js) : `set(pane, 'min'|'max')` (bascule), `state()`, `apply()`, `reset()` ; classes `wmin` sur la fenêtre, `max-<pane>` / `<pane>-min` sur `#eb`. Sur téléphone (< 900 px) « Réduire » ferme le tiroir. Libellés des boutons d'outils dans `.lb` (masqués visuellement sous 1420 px). Tests W13.
+
+### V1.10.2 – onglets déroulants de la barre du haut
+`NAV(u)` dans `app.js` : un élément = `[écran, titre]`, un groupe = `{ grp: 'Titre', items: [[écran, titre, description]] }` → bouton `.navgb` + liste `.navdrop` en position fixe (`placeNavDrop`, `closeNavDrops`). Pour regrouper d'autres écrans, ajouter un groupe dans `NAV`. Couleur du texte du thème : `var(--ink)` (il n'existe pas de `--fg`). Tests W14.
+
+### V1.10.3 – Accueil déroulant
+Premier groupe de `NAV(u)` : `{ grp: 'Accueil', head, items: [home, settings, (portal si administrateur), '@logout'] }` ; l'élément `@logout` devient le bouton `#logout` (plus de bloc `.user` dans l'en-tête). Dans les tests : ouvrir d'abord `.navgb:has-text("Accueil")`. Tests W15.
+
+### V1.10.4
+Clic sur `.navgb` hors de son groupe → `app._openGrp` + `go(premier sous-titre)` ; `shell()` rouvre la liste. Portail : `aboutCard()` (portal.js) lit `EE.Config.aboutText()` (texte par défaut dans `DEFAULTS.brand.about`, champ `#bab`). Tests W16.
+
+### V1.10.5 – pages groupées
+`go(écran)` : si l'écran appartient à un groupe de `NAV`, `renderGroup()` crée une section `#sec-<écran>` / `#gs-<écran>` par sous-titre et appelle chaque écran. **Les écrans d'un groupe écrivent dans `EE.main('<écran>')`** (renvoie `#gs-<écran>` s'il existe, sinon `#main`) et non dans `$('#main')` : home, settings, portal, quant, compo. Pour mettre un nouvel écran dans un groupe, faire de même. La zone qui défile est `#main`. Tests W17.
+
+### V1.10.6
+Dans `NAV`, la description d'un sous-titre est un **tableau** de points (`['Prix', 'Règles de calcul', …]`) affiché par `pts(d)` en liste verticale `.navpts`. Test W18.
+
+### V1.10.7
+Fiche d'exemple (`examples_ui.js` › `detail`) : `#exprev.fitall` = SVG ajusté (width/height 100 %, viewBox) ; zoom en changeant la hauteur du SVG ; plein écran = couche `.exoverlay` ajoutée à `body` (un `position:fixed` à l'intérieur des cartes ne couvre pas l'écran à cause des transformations 3D). Test W19.
+
+### V1.11.0 – Bureau d'études BT
+Quatre fichiers, chargés après `pv.js` (bibliothèque + moteur) et après `menu.js` (interface) :
+| Fichier | Rôle |
+|---|---|
+| `js/bt_lib.js` | `EE.BTLib` : bibliothèque d'appareils (576 produits « Générique », prix 0) ; clé `eep.btlib` (écrite seulement après modification) ; `all, get(ref,fab), upsert, remove, reset, cats, fabs, toCSV, parseCSV, importCSV(text,'merge'|'prices'), COLS`. **Ne jamais inventer de référence fabricant.** |
+| `js/bt_engine.js` | `EE.BT` (fonctions pures) : tableaux `IZ/KT_AIR/KT_SOIL/KG/RHO/CURVE_IM/METHODS` (à vérifier), `newStudy/newBoard/newCircuit/newLoad`, `balance`, `compute(st,lib)` → `{circuits, boards, balance, msgs, stats}`, `layout`, `enclosures`, `thermal`, `selectivity`, `curvePoints`, `bom`, `labels`. |
+| `js/bt_ui.js` | Écran `bt` (`EE.Screens.bt`), état `EE.BTUI` (`st, res, bom, sel, tab, hist`). Études dans `eep.bt.<id utilisateur>` ; format d'échange `yak-elec-pro-etude-bt`. `changed()` = instantané + recalcul + sauvegarde différée + rendu. Attention : `ST.openId` (identifiant) ≠ `ST.open()` (fonction). |
+| `js/bt_views.js` | `EE.BTViews` : onglets répartition, enveloppe, 2D (`svg2dOf`), 3D (`render3d`, projection SVG), thermique, sélectivité, nomenclature, étiquettes, dossier (`dossierHTML`), bibliothèque ; exports `excel` (SpreadsheetML), `csv*`, `order`, `unifilaire()` (projet atelier, `p.sheets` une feuille par tableau, `st.unifProject`). |
+Règles : sélectivité / filiation déclarées **uniquement** à partir de `st.coord` (données constructeur avec source) ; les valeurs inconnues restent vides et produisent « Données manquantes ». Le vérificateur de l'atelier est prévu pour les schémas développés : sur l'unifilaire généré, les bornes de retour des récepteurs restent libres (normal) ; le test BT20b contrôle seulement les défauts de raccordement. Tests : `python3 tests/bt_tests.py [fichier]` (32 tests BT).
+
+
+### V1.11.1 – Correctif
+- Application Windows et site : le script ajouté par le lanceur (et l'enregistrement du service de la PWA) était inséré avant la première balise `</body>`, qui se trouvait dans le code d'impression (export.js, bt_views.js) ; le code JavaScript était coupé et s'affichait en texte. Insertion désormais avant la dernière balise `</body>` ; balises protégées dans le JavaScript.
+
+### V1.12.0 – Statistiques de connexion
+- `js/stats.js` (EE.Stats) : signal toutes les 60 s (PATCH `presence/<identifiant>.json`) vers une base Firebase Realtime Database ; lecture par le propriétaire avec Firebase Auth (e-mail/mot de passe, jeton gardé en mémoire seulement) ; résumé et règles de la base (`EE.Stats.rules()`, lecture réservée à `Config.ADMIN_EMAIL`).
+- Configuration : `control.json` → `statsUrl`, `statsKey` ; ou `Config.remote.statsUrl/statsKey` pour un seul appareil. Aucun envoi sans configuration.
+- Portail : onglet `stats` (👥 Connexions). Avis aux utilisateurs sur l'écran de connexion (`#st-notice`). Ne jamais envoyer d'autres données (projets, mots de passe) sans accord explicite du propriétaire et information des utilisateurs.
+- Tests : `python3 tests/stats_tests.py`.
+
+### V1.13.0 – Téléchargement Android depuis le site
+- `js/android_dl.js` (EE.AndroidDL) : bouton et fenêtre d'installation ; adresse : control.json `androidUrl` (https seulement) > `window.YAK_APK_URL` (intégré par build.py depuis la variable YAK_APK_URL) > `DEFAULT_URL` (Release « android » du dépôt). Visible seulement sur le site (http/https, pas localhost, pas dans l'application Android : `window.YakAndroid`).
+- `build.py` fabrique aussi `dist/site/android.html` (page à partager, sans JavaScript). `site.yml` la copie dans `site/`.
+- `android.yml` : `assembleRelease`, publication dans la Release fixe `android` (`gh release upload --clobber`). Signature : secrets `YAK_KEYSTORE_B64` / `YAK_KEYSTORE_PASSWORD` / `YAK_KEY_ALIAS` si présents, sinon clé de test. Ne jamais mettre de clé de signature ni de mot de passe dans le dépôt.
+- Tests : `python3 build.py && python3 tests/android_dl_tests.py`.

@@ -78,7 +78,7 @@
     if (!list.length) { const s = Q.newStudy('Étude 1'); Studies.put(s); list = [s]; }
     if (!cur || !Studies.get(cur)) cur = list[0].id;
     const st = Studies.get(cur), cfg = EE.Config.get();
-    $('#main').innerHTML = `<div class="page"><div class="bar no-print"><h1>Quantitatif et coffret</h1><div class="grow"></div>
+    EE.main('quant').innerHTML = `<div class="page"><div class="bar no-print"><h1>Quantitatif et coffret</h1><div class="grow"></div>
         <select id="qsel" aria-label="Étude">${list.map((s) => `<option value="${s.id}"${s.id === cur ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select>
         <button class="btn" id="qnew">Nouvelle</button><button class="btn" id="qren">Renommer</button><button class="btn" id="qdup">Dupliquer</button><button class="btn danger" id="qdel">Supprimer</button></div>
       <p class="muted no-print">Saisissez les dimensions des pièces et les appareils à installer : l'application calcule les câbles, conduits, appareillage, protections et la composition du coffret. Les règles et les prix se règlent dans le Portail.</p>

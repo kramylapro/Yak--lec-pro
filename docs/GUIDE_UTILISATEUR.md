@@ -76,3 +76,48 @@ Dans la Bibliothèque, catégorie **Protection** : sectionneur bipolaire, sectio
 - Ce qui reste (court-circuit, récepteur mal alimenté, phase/neutre inversés…) nécessite votre jugement : suivez « Comment corriger ».
 
 - **Sur la feuille** : après « Vérifier », cliquez sur un cercle numéroté rouge/orange : une bulle explique l'erreur et propose « 🛠 Corriger automatiquement ».
+
+
+## Nouveautés V1.10
+### Atelier
+- **Menus** en haut de la feuille : Fichier (nouveau, ouvrir, enregistrer, renommer, dupliquer, ranger dans un dossier, imprimer, exporter), Édition, Affichage, Insertion (textes, titres, commentaires, repères, nouvelle feuille), Simulation (lancer, pause, réinitialiser, arrêter), Outils (vérifier, réparer, calculs, pédagogie), Aide (raccourcis).
+- **Feuilles** : « ＋ Feuille » ajoute une feuille au projet (ex. « Puissance » et « Commande ») ; cliquez sur un onglet pour changer de feuille, double-cliquez pour le renommer, × pour supprimer.
+- **⇋ Retourner** (touche M) : miroir du composant sélectionné. **Déplacer un fil** : cliquez sur le fil puis tirez-le ; ses deux bouts restent sur leurs bornes.
+- **Texte, titre, commentaire, repère** : catégorie *Annotations* ou menu Insertion ; écrivez le texte dans le panneau Propriétés.
+### Simulation
+- **⏸ Pause** fige les temporisations ; **Tensions et courants calculés** : tableau U / P / I pour chaque récepteur alimenté (indiquez la puissance dans « Valeur », ex. 100 W, 1,5 kW).
+- **Automate / relais logique** : écrivez le programme dans « Programme », ex. `Q1 = (I1 OU Q1) ET NON I2 ; Q2 = I3`. Les entrées sont actives quand elles reçoivent la phase ; les sorties ferment le contact C-Qn.
+### Exemples, calculs, pédagogie
+- **Exemples** : 12 circuits complets ; « Voir la fiche » (schéma, composants, fonctionnement, étapes, exercices, test), « Ouvrir dans l'atelier » pour les modifier et les simuler.
+- **Calculs** : remplissez les cases ; le résultat, la formule et les unités s'affichent aussitôt.
+- **Pédagogie** : choisissez « élève » ou « enseignant ». Élève : cours, quiz des symboles, exercices (Commencer → câbler → Outils › Corriger mon exercice → Remettre mon travail : un fichier est téléchargé, à envoyer à l'enseignant). Enseignant : créer un exercice à partir d'un exemple ou d'un de ses projets (le projet sert de corrigé), l'exporter pour les élèves, importer et recorriger les copies, ajouter ses cours.
+### Projets, impression
+- **Mes projets** : « ＋ Nouveau dossier », bouton « Ranger » sur chaque projet, filtres par dossier.
+- **Exporter… › Imprimer / PDF mis en page** : format A4/A3/A2, orientation, toutes les feuilles, cartouche (titre, auteur, date, n° de feuille, échelle), aperçu ; « Télécharger le PDF » ou « Imprimer ». **Exporter › DXF** : fichier pour AutoCAD / LibreCAD (1 carreau = 5 mm, ou 25 cm pour un plan).
+
+### Fenêtres de l'atelier (V1.10.1)
+Les Symboles, la Feuille de dessin et le Panneau ont chacun une barre de titre avec ― (réduire) et ☐ (agrandir). Une fenêtre réduite devient une fine bande verticale : cliquez dessus pour la rouvrir. Double-cliquez sur une barre de titre pour l'agrandir à tout l'écran de travail, puis ❐ pour restaurer. Tirez la séparation entre deux fenêtres pour changer leur largeur. Menu Affichage › « Rétablir la disposition des fenêtres » remet tout comme au départ.
+
+### Onglet « Matériel » (V1.10.2)
+Dans la barre du haut, cliquez sur **Matériel ▾** : les sous-titres **Quantitatif** et **Composants** apparaissent juste en dessous ; cliquez sur celui que vous voulez.
+
+### Onglet « Accueil » (V1.10.3)
+Cliquez sur **Accueil ▾** : vous y trouvez la page d'accueil, les **Paramètres**, le **Portail administrateur** (uniquement sur le compte administrateur) et **Déconnexion**. Le nom du compte connecté est affiché en haut de la liste. Le logo ramène toujours directement à la page d'accueil.
+
+### Contenu au clic et présentation (V1.10.4)
+Un clic sur « Accueil ▾ » ou « Matériel ▾ » affiche directement le contenu du premier sous-titre et ouvre la liste des autres. Le Portail administrateur commence par un texte de présentation de l'application, que vous pouvez réécrire dans Portail › Apparence et textes › « Texte de présentation ».
+
+### Pages « Accueil » et « Matériel » (V1.10.5)
+Les contenus des sous-titres s'affichent les uns sous les autres : descendez avec la molette (ou le doigt) pour passer du Quantitatif aux Composants, ou de l'accueil aux Paramètres. Les liens « ↕ » à droite de chaque bandeau-titre sautent directement à l'autre partie.
+
+### Schéma d'une fiche d'exemple (V1.10.7)
+Le schéma est affiché en entier. « + » et « − » zooment (faites ensuite défiler), « Tout voir » revient au schéma entier, « ⛶ Plein écran » l'affiche sur tout l'écran (Échap ou ✕ Fermer pour revenir).
+
+## Bureau d'études BT (V1.11)
+1. Cliquez sur **Bureau d'études** dans la barre du haut, puis **＋ Nouvelle étude** : remplissez l'assistant (seul le nom est obligatoire ; laissez vide ce que vous ne connaissez pas). Pour découvrir, cliquez sur **Créer l'étude d'exemple**.
+2. À gauche, l'**explorateur** montre le TGBT, ses départs, les tableaux divisionnaires et les circuits (pastille verte = conforme, orange = à vérifier, rouge = non conforme, grise = données manquantes).
+3. Sélectionnez un tableau puis **+ Circuit** (ruban) ; à droite, dans les **propriétés**, indiquez le type, la longueur, le mode de pose et les récepteurs (puissance, nombre). **+ Départ** crée un nouveau tableau divisionnaire alimenté par le tableau sélectionné.
+4. Le calcul se fait tout seul. Onglet **Calculs et protections** : cliquez sur une ligne pour voir la note de calcul pas à pas (Ib, calibre, Iz, section, chute de tension, Icc, protection) et les autres solutions possibles.
+5. Les onglets **Répartition**, **Enveloppe**, **Vue 2D**, **Vue 3D**, **Thermique** organisent le tableau ; **Nomenclature et chiffrage**, **Étiquettes**, **Dossier et exports** produisent les documents (PDF, Excel, CSV, schéma unifilaire dans l'atelier).
+6. Les prix sont à saisir (dans la nomenclature ou la bibliothèque) ou à importer depuis le tarif de votre fournisseur (Bibliothèque › Importer un tarif).
+Rappel : les résultats doivent être validés par une personne qualifiée ; les tableaux de calcul sont à vérifier sur l'édition des normes en vigueur dans votre pays.
