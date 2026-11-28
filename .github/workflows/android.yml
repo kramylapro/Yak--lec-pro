@@ -1,1 +1,62 @@
-
+name: Construire l'application Android (APK)
+# Fabrique l'APK et le publie dans la Release fixe « android » du dépôt :
+#   https://github.com/<compte>/<dépôt>/releases/download/android/Yak-elec-pro.apk
+# Cette adresse ne change jamais : c'est elle qu'utilise le bouton « Télécharger l'application Android » du site.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+    branches: [main]
+    paths: ['js/**', 'css/**', 'index.html', 'build.py', 'assets/**', 'android/**']
+permissions: { contents: write }
+concurrency: { group: apk, cancel-in-progress: true }
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pillow
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.9' }
+      - name: Adresse du contrôle à distance et fabrication de l'application web
+        run: |
+          OWNER="${GITHUB_REPOSITORY%%/*}"; REPO="${GITHUB_REPOSITORY##*/}"
+          export YAK_CONTROL_URL="https://raw.githubusercontent.com/${OWNER}/${REPO}/main/site/control.json"
+          export YAK_APK_URL="https://github.com/${OWNER}/${REPO}/releases/download/android/Yak-elec-pro.apk"
+          python3 build.py
+          cp dist/yak-elec-pro.html android/app/src/main/assets/index.html
+          python3 android/make_icons.py
+      - name: Clé de signature (secrets du dépôt, facultatif)
+        env:
+          KS: ${{ secrets.YAK_KEYSTORE_B64 }}
+          PW: ${{ secrets.YAK_KEYSTORE_PASSWORD }}
+          AL: ${{ secrets.YAK_KEY_ALIAS }}
+        run: |
+          if [ -n "$KS" ] && [ -n "$PW" ]; then
+            echo "$KS" | base64 -d > "$RUNNER_TEMP/yak.keystore"
+            { echo "YAK_KEYSTORE=$RUNNER_TEMP/yak.keystore"; echo "YAK_KEYSTORE_PASSWORD=$PW"; echo "YAK_KEY_ALIAS=${AL:-yak}"; } >> "$GITHUB_ENV"
+            echo "Signature : clé du propriétaire (secrets)"
+          else
+            echo "::warning::Aucune clé de signature dans les secrets : APK signé avec une clé de test (voir docs/GUIDE_ANDROID.md)."
+          fi
+      - name: Construire l'APK
+        working-directory: android
+        run: |
+          gradle --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../Yak-elec-pro.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yak-elec-pro-android
+          path: Yak-elec-pro.apk
+      - name: Publier l'APK (Release « android », adresse fixe)
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          VER=$(sed -n "s/.*EE.VERSION = '\([^']*\)'.*/\1/p" js/core.js)
+          gh release view android >/dev/null 2>&1 || gh release create android --title "Yak-élec-pro pour Android" --notes "Application Android (APK)." --latest
+          gh release upload android Yak-elec-pro.apk --clobber
+          gh release edit android --title "Yak-élec-pro pour Android – V${VER}" --notes "Dernière version : V${VER} ($(date -u +%d/%m/%Y))."
