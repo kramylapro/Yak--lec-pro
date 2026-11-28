@@ -1,0 +1,28 @@
+name: Publier le site (PWA) et le fichier de contrôle
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['js/**', 'css/**', 'index.html', 'build.py', 'assets/**']
+permissions: { contents: write }
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pillow
+      - name: Fabriquer le site (sans écraser site/control.json)
+        run: |
+          OWNER="${GITHUB_REPOSITORY%%/*}"; REPO="${GITHUB_REPOSITORY##*/}"
+          export YAK_CONTROL_URL="https://raw.githubusercontent.com/${OWNER}/${REPO}/main/site/control.json"
+          export YAK_APK_URL="https://github.com/${OWNER}/${REPO}/releases/download/android/Yak-elec-pro.apk"
+          python3 build.py
+          mkdir -p site
+          cp dist/site/index.html dist/site/manifest.webmanifest dist/site/sw.js dist/site/icon-192.png dist/site/icon-512.png dist/site/android.html site/
+          [ -f site/control.json ] || cp dist/site/control.json site/control.json
+      - name: Enregistrer
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@users.noreply.github.com"
+          git add site; git diff --cached --quiet || (git commit -m "Site Yak-élec-pro mis à jour" && git push)
